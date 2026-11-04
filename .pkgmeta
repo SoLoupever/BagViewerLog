@@ -1,0 +1,10 @@
+package-as: ViewerLog
+
+move-folders:
+
+ignore:
+  - .github
+  - .gitignore
+  - .gitattributes
+  - README
+  - README.md

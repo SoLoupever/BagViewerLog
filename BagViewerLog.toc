@@ -1,0 +1,55 @@
+## Interface: 120105
+## Title: BagViewerLog
+## Notes: Modern bag replacement in the ViewerLog style
+## Notes-frFR: Sac moderne au style ViewerLog
+## Author: SoLoup_ever
+## Version: 0.1.0
+## RequiredDeps: ViewerLog, ViewerLog_Items
+## IconTexture: Interface\AddOns\ViewerLog\logo_vl.blp
+
+## ── NOYAU ─────────────────────────────────────────────────────────
+core\Init.lua
+core\Settings.lua
+
+## ── LOCALISATION ─────────────────────────────────────────────────
+locales\Locales_frFR.lua
+locales\Locales_enUS.lua
+
+## ── CATÉGORIES ────────────────────────────────────────────────────
+categories\Registry.lua
+categories\Base.lua
+
+## ── DONNÉES ───────────────────────────────────────────────────────
+data\Inventory.lua
+data\Bank.lua
+
+## ── MODULES ───────────────────────────────────────────────────────
+modules\Search.lua
+modules\Recent.lua
+modules\Cursor.lua
+modules\Assign.lua
+modules\ItemLevel.lua
+modules\Custom.lua
+modules\bank\Character.lua
+modules\bank\Warband.lua
+
+## ── UI ────────────────────────────────────────────────────────────
+ui\Theme.lua
+ui\Skin.lua
+ui\Registry.lua
+ui\ItemButtons.lua
+ui\Sections.lua
+ui\PlusSlots.lua
+ui\CategoryGrid.lua
+ui\widgets\SearchBox.lua
+ui\widgets\SortButton.lua
+ui\widgets\MenuButton.lua
+ui\widgets\CloseButton.lua
+ui\widgets\Money.lua
+ui\Frame.lua
+ui\BankFrame.lua
+ui\CategoryMenu.lua
+
+## ── REMPLACEMENT DU SAC BLIZZARD (en dernier) ─────────────────────
+core\Replace.lua
+core\ReplaceBank.lua
