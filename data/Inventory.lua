@@ -9,15 +9,15 @@ local C_Container, C_Item = C_Container, C_Item
 -- Enum.BagIndex.Backpack .. Enum.BagIndex.ReagentBag
 local FIRST_BAG, LAST_BAG = 0, 5
 
-local static = {}   -- itemID -> { icon, classID, quality }
+local static = {}   -- itemID -> { icon, classID, subClassID, quality }
 local snapshot = { groups = {}, free = {}, used = 0, total = 0 }
 local active, scheduled = false, false
 
 local function GetStatic(id)
     local s = static[id]
     if not s then
-        local _, _, _, _, icon, classID = C_Item.GetItemInfoInstant(id)
-        s = { icon = icon, classID = classID }
+        local _, _, _, _, icon, classID, subClassID = C_Item.GetItemInfoInstant(id)
+        s = { icon = icon, classID = classID, subClassID = subClassID }
         static[id] = s
     end
     if s.quality == nil then s.quality = C_Item.GetItemQualityByID(id) end
@@ -43,7 +43,8 @@ local function Rebuild()
                 local s = GetStatic(e.id)
                 local item = {
                     bag = bag, slot = slot, id = e.id, count = e.count, link = e.link,
-                    icon = s.icon, classID = s.classID, quality = s.quality,
+                    icon = s.icon, classID = s.classID, subClassID = s.subClassID,
+                    quality = s.quality,
                     name = e.link and e.link:match("%[(.-)%]"),
                 }
                 items[#items + 1] = item

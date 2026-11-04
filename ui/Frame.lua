@@ -7,7 +7,7 @@ local addonName, ns = ...
 local C  = ns.UI.Colors
 local IB = ns.UI.ItemButtons
 
-local COLS, SLOT, GAP, PAD = 13, 37, 4, 12
+local COLS, SLOT, GAP, PAD = 15, 37, 4, 12
 local SCROLLBAR_W = 24
 local TITLE_H, TOOLBAR_H, FOOTER_H = 44, 26, 20
 
@@ -122,7 +122,7 @@ local function Build()
     IB.SetContainer(content)
     Grid = ns.UI.NewCategoryGrid({
         content = content, IB = IB, Sections = ns.UI.NewSections(),
-        cols = COLS, prefix = "", refresh = Layout,
+        cols = COLS, prefix = "", refresh = Layout, usePlus = true,
     })
 
     frame:SetScript("OnShow", function()

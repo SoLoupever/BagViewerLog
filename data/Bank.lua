@@ -51,7 +51,8 @@ function ns.Bank.GetSlots(id, tabID)
             local s = ns.GetItemStatic(e.id)
             list[slot] = {
                 bag = tabID, slot = slot, id = e.id, count = e.count, link = e.link,
-                icon = s.icon, classID = s.classID, quality = s.quality,
+                icon = s.icon, classID = s.classID, subClassID = s.subClassID,
+                quality = s.quality,
                 name = e.link and e.link:match("%[(.-)%]"),
             }
         else

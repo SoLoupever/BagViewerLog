@@ -6,7 +6,6 @@ local addonName, ns = ...
 -- Une instance par cadre (sac, banque) : ns.UI.NewItemButtons().
 
 local SetItemButtonQuality, SetItemButtonCount = SetItemButtonQuality, SetItemButtonCount
-local GetItemQualityColor = C_Item.GetItemQualityColor
 
 function ns.UI.NewItemButtons()
     local IB = {}
@@ -60,24 +59,6 @@ function ns.UI.NewItemButtons()
         end
     end
 
-    -- Niveau d'objet, coin bas-gauche, couleur de la qualité.
-    local function SetItemLevel(btn, entry)
-        local ilvl = ns.ItemLevel.Get(entry)
-        if not ilvl then
-            if btn.ilvl then btn.ilvl:Hide() end
-            return
-        end
-        if not btn.ilvl then
-            btn.ilvl = btn:CreateFontString(nil, "OVERLAY", "NumberFontNormal")
-            btn.ilvl:SetPoint("BOTTOMLEFT", 3, 2)
-        end
-        local r, g, b = 1, 1, 1
-        if entry.quality then r, g, b = GetItemQualityColor(entry.quality) end
-        btn.ilvl:SetTextColor(r, g, b)
-        btn.ilvl:SetText(ilvl)
-        btn.ilvl:Show()
-    end
-
     -- entry = objet du snapshot (icon, count, link, quality, name) ou emplacement vide.
     function IB.Set(btn, entry)
         btn.entry = entry
@@ -89,7 +70,7 @@ function ns.UI.NewItemButtons()
         SetItemButtonCount(btn, entry.count)
         btn:UpdateCooldown(entry.icon)
         btn:SetMatchesSearch(ns.Search.Matches(entry))
-        SetItemLevel(btn, entry)
+        ns.UI.ApplyBadges(btn, entry)
     end
 
     -- Bouton d'un emplacement libre : sert de cible de dépôt, le nombre de libres
@@ -101,7 +82,7 @@ function ns.UI.NewItemButtons()
         btn:SetItemButtonTexture(nil)
         SetItemButtonCount(btn, 0)
         btn:SetMatchesSearch(true)
-        if btn.ilvl then btn.ilvl:Hide() end
+        ns.UI.HideBadges(btn)
         if not btn.freeCount then
             btn.freeCount = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
             btn.freeCount:SetPoint("CENTER", 0, 0)

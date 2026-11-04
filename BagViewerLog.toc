@@ -5,7 +5,7 @@
 ## Author: SoLoup_ever
 ## Version: 0.1.0
 ## RequiredDeps: ViewerLog, ViewerLog_Items
-## IconTexture: Interface\AddOns\ViewerLog\logo_vl.blp
+## IconTexture: Interface\AddOns\BagViewerLog\BVL_Logo.blp
 
 ## ── NOYAU ─────────────────────────────────────────────────────────
 core\Init.lua
@@ -29,6 +29,10 @@ modules\Recent.lua
 modules\Cursor.lua
 modules\Assign.lua
 modules\ItemLevel.lua
+modules\Keystone.lua
+modules\Hearthstone.lua
+modules\Toy.lua
+modules\EquipSets.lua
 modules\Custom.lua
 modules\bank\Character.lua
 modules\bank\Warband.lua
@@ -37,6 +41,9 @@ modules\bank\Warband.lua
 ui\Theme.lua
 ui\Skin.lua
 ui\Registry.lua
+ui\Badges.lua
+ui\badges\ItemLevel.lua
+ui\badges\Keystone.lua
 ui\ItemButtons.lua
 ui\Sections.lua
 ui\PlusSlots.lua

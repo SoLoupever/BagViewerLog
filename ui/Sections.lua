@@ -1,17 +1,19 @@
 local addonName, ns = ...
 
 -- En-têtes de catégorie (réutilisés). Clic = replier / déplier.
+-- Sous-catégories : simple libellé (sans flèche, ligne ni compteur).
 -- Flèche : atlas du Housing (common-icon-backarrow), tournée selon l'état.
 -- Une instance par cadre (sac, banque) : ns.UI.NewSections().
 
 local C = ns.UI.Colors
 
+local SECTION_H = 18
 local ARROW_ATLAS = "common-icon-backarrow"
 local ROT_EXPANDED, ROT_COLLAPSED = math.pi / 2, math.pi   -- bas, droite
 
 local function Create(parent)
     local h = CreateFrame("Button", nil, parent)
-    h:SetHeight(18)
+    h:SetHeight(SECTION_H)
 
     h.arrow = h:CreateTexture(nil, "ARTWORK")
     h.arrow:SetSize(14, 14)
@@ -19,6 +21,7 @@ local function Create(parent)
     h.arrow:SetVertexColor(C.accent[1], C.accent[2], C.accent[3])
 
     h.label = h:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    h.label:SetWordWrap(false)
     h.label:SetPoint("LEFT", h.arrow, "RIGHT", 6, 0)
     h.label:SetTextColor(C.accent[1], C.accent[2], C.accent[3], 1)
 
@@ -48,31 +51,73 @@ function ns.UI.NewSections()
         used = 0
     end
 
-    -- Place l'en-tête à la hauteur y (px sous le haut de parent), décalé de indent.
-    -- count : nombre ou texte. onToggle(id) au clic.
-    function S.Acquire(parent, y, id, text, count, collapsed, onToggle, indent)
-        indent = indent or 0
+    local function Take(parent)
         used = used + 1
         local h = pool[used]
         if not h then
             h = Create(parent)
             pool[used] = h
         end
-        h.arrow:ClearAllPoints()
-        h.arrow:SetPoint("LEFT", h, "LEFT", indent, 0)
-        h.arrow:SetRotation(collapsed and ROT_COLLAPSED or ROT_EXPANDED)
-        h.line:ClearAllPoints()
-        h.line:SetPoint("BOTTOMLEFT", h, "BOTTOMLEFT", indent, 0)
-        h.line:SetPoint("BOTTOMRIGHT", h, "BOTTOMRIGHT", 0, 0)
-        h.label:SetFontObject(indent > 0 and "GameFontNormalSmall" or "GameFontNormal")
-        h.label:SetText(text)
-        h.count:SetText("(" .. count .. ")")
-        h:SetScript("OnClick", function() onToggle(id) end)
+        return h
+    end
+
+    local function Place(h, parent, y)
         h:ClearAllPoints()
         h:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -y)
         h:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, -y)
         h:Show()
+    end
+
+    -- Place l'en-tête à la hauteur y (px sous le haut de parent).
+    -- count : nombre ou texte. onToggle(id) au clic.
+    function S.Acquire(parent, y, id, text, count, collapsed, onToggle)
+        local h = Take(parent)
+        h.arrow:ClearAllPoints()
+        h.arrow:SetPoint("LEFT", h, "LEFT", 0, 0)
+        h.arrow:SetRotation(collapsed and ROT_COLLAPSED or ROT_EXPANDED)
+        h.arrow:Show()
+        h.line:ClearAllPoints()
+        h.line:SetPoint("BOTTOMLEFT", h, "BOTTOMLEFT", 0, 0)
+        h.line:SetPoint("BOTTOMRIGHT", h, "BOTTOMRIGHT", 0, 0)
+        h.line:Show()
+        h.count:Show()
+        h.label:ClearAllPoints()
+        h.label:SetPoint("LEFT", h.arrow, "RIGHT", 6, 0)
+        h.label:SetFontObject("GameFontNormal")
+        h.label:SetWidth(0)
+        h.label:SetText(text)
+        h.count:SetText("(" .. count .. ")")
+        h:EnableMouse(true)
+        h:SetScript("OnClick", function() onToggle(id) end)
+        Place(h, parent, y)
         return h
+    end
+
+    -- Libellé de bloc : texte seul, non cliquable. h.textW = largeur du texte ;
+    -- l'appelant le positionne (SetPoint) et fixe sa largeur (SetLabelWidth).
+    function S.AcquireLabel(parent, text)
+        local h = Take(parent)
+        h.arrow:Hide()
+        h.line:Hide()
+        h.count:Hide()
+        h.label:ClearAllPoints()
+        h.label:SetPoint("LEFT", h, "LEFT", 0, 0)
+        h.label:SetFontObject("GameFontNormalSmall")
+        h.label:SetWidth(0)
+        h.label:SetText(text)
+        h.textW = h.label:GetStringWidth()
+        h:SetSize(h.textW + 2, SECTION_H)
+        h:EnableMouse(false)
+        h:SetScript("OnClick", nil)
+        h:ClearAllPoints()
+        h:Show()
+        return h
+    end
+
+    -- Largeur du bloc : un libellé plus long est tronqué.
+    function S.SetLabelWidth(h, w)
+        h:SetWidth(w)
+        h.label:SetWidth(w)
     end
 
     return S
