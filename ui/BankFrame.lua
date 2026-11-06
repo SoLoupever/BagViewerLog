@@ -18,6 +18,7 @@ local FRAME_W   = PAD * 2 + CONTENT_W + SCROLLBAR_W
 local frame, content, emptyText, Grid
 local typeBtns = {}
 local curType
+local EMPTY_SNAP = { groups = {}, free = {}, numTabs = 0 }
 
 local Refresh
 
@@ -37,11 +38,14 @@ local function Highlight(btn, on)
     btn.selected = on
 end
 
+local SwitchType
+
 local function GetTypeButton(i)
     local b = typeBtns[i]
     if not b then
         b = ns.UI.Button(frame, 110, 26, "")
         b:SetScript("OnLeave", function(s) Highlight(s, s.selected) end)
+        b:SetScript("OnClick", function(s) SwitchType(s.typeID) end)
         typeBtns[i] = b
     end
     return b
@@ -50,16 +54,16 @@ end
 -- ── Grille ────────────────────────────────────────────────────────
 local function Layout()
     local def = curType and ns.Bank.GetType(curType)
-    local snap = def and ns.Bank.GetSnapshot(curType) or { groups = {}, free = {}, numTabs = 0 }
+    local snap = def and ns.Bank.Get(curType) or EMPTY_SNAP
 
-    local contentH = Grid.Render(snap, { holding = false, showCustom = false })
+    local contentH = Grid.Render(snap, { holding = ns.Cursor.GetItemID() ~= nil, showCustom = false })
     content:SetHeight(contentH)
     emptyText:SetShown(snap.numTabs == 0)
     -- La fenêtre suit le contenu, plafonnée à la hauteur de l'écran.
     frame:SetHeight(math.min(contentH + TOP_CHROME + BOTTOM_CHROME, UIParent:GetHeight()))
 end
 
-local function SwitchType(id)
+function SwitchType(id)
     curType = id
     SyncBlizzard(ns.Bank.GetType(id))
     Refresh()
@@ -81,7 +85,7 @@ Refresh = function()
         b:ClearAllPoints()
         b:SetPoint("TOPLEFT", frame, "TOPLEFT", PAD + (i - 1) * 116, -44)
         b.label:SetText(ns.L(def.labelKey))
-        b:SetScript("OnClick", function() SwitchType(def.id) end)
+        b.typeID = def.id
         Highlight(b, def.id == curType)
         b:Show()
     end
@@ -134,7 +138,7 @@ local function Build()
     IB.SetContainer(content)
     Grid = ns.UI.NewCategoryGrid({
         content = content, IB = IB, Sections = ns.UI.NewSections(),
-        cols = COLS, prefix = "bank:", refresh = Refresh,
+        cols = COLS, prefix = "bank:", refresh = Refresh, usePlus = true,
     })
 
     emptyText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -157,6 +161,21 @@ local function Build()
     ns.On("BANK_CHANGED", function()
         if frame:IsShown() then Refresh() end
     end)
+
+    -- Objet tenu au curseur ("+") et changements de classement : un seul
+    -- rendu par image, même si plusieurs événements arrivent ensemble.
+    local queued = false
+    local function QueueLayout()
+        if queued then return end
+        queued = true
+        C_Timer.After(0, function()
+            queued = false
+            if frame:IsShown() then Layout() end
+        end)
+    end
+    for _, ev in ipairs({ "CURSOR_ITEM_CHANGED", "ASSIGN_CHANGED", "CATEGORIES_CHANGED" }) do
+        ns.On(ev, QueueLayout)
+    end
 end
 
 -- ── API du cadre ──────────────────────────────────────────────────

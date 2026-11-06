@@ -26,14 +26,18 @@ data\Bank.lua
 ## ── MODULES ───────────────────────────────────────────────────────
 modules\Search.lua
 modules\Recent.lua
+modules\Stack.lua
+modules\Outdated.lua
 modules\Cursor.lua
 modules\Assign.lua
 modules\ItemLevel.lua
+modules\Reagent.lua
 modules\Keystone.lua
 modules\Hearthstone.lua
 modules\Toy.lua
 modules\EquipSets.lua
 modules\Custom.lua
+modules\Order.lua
 modules\bank\Character.lua
 modules\bank\Warband.lua
 
@@ -44,6 +48,7 @@ ui\Registry.lua
 ui\Badges.lua
 ui\badges\ItemLevel.lua
 ui\badges\Keystone.lua
+ui\badges\Reagent.lua
 ui\ItemButtons.lua
 ui\Sections.lua
 ui\PlusSlots.lua
@@ -55,6 +60,8 @@ ui\widgets\CloseButton.lua
 ui\widgets\Money.lua
 ui\Frame.lua
 ui\BankFrame.lua
+ui\menu\CategoryList.lua
+ui\menu\ItemList.lua
 ui\CategoryMenu.lua
 
 ## ── REMPLACEMENT DU SAC BLIZZARD (en dernier) ─────────────────────

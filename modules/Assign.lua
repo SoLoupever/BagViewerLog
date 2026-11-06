@@ -18,6 +18,17 @@ function ns.Assign.Clear(itemID)
     ns.Fire("ASSIGN_CHANGED")
 end
 
+-- itemIDs classés à la main dans la catégorie (triés), remplit out.
+function ns.Assign.GetItems(catID, out)
+    out = out or {}
+    wipe(out)
+    for itemID, id in pairs(Store()) do
+        if id == catID then out[#out + 1] = itemID end
+    end
+    table.sort(out)
+    return out
+end
+
 ns.RegisterOverride(function(item)
     return Store()[item.id]
 end)

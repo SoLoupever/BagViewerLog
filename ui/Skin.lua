@@ -37,3 +37,22 @@ function ns.UI.Button(parent, w, h, text)
     end)
     return b
 end
+
+-- Champ de saisie plat ; Entrée / Échap rendent le focus.
+function ns.UI.EditBox(parent, height, maxLetters)
+    local box = ns.UI.Flat(parent, "inner", "innerBorder", "EditBox")
+    box:SetHeight(height)
+    box:SetAutoFocus(false)
+    box:SetFontObject("GameFontHighlight")
+    box:SetTextInsets(8, 8, 0, 0)
+    box:SetMaxLetters(maxLetters)
+    box:SetScript("OnEditFocusGained", function(s)
+        s:SetBackdropBorderColor(C.btnHoverBorder[1], C.btnHoverBorder[2], C.btnHoverBorder[3], 1)
+    end)
+    box:SetScript("OnEditFocusLost", function(s)
+        s:SetBackdropBorderColor(C.innerBorder[1], C.innerBorder[2], C.innerBorder[3], 1)
+    end)
+    box:SetScript("OnEscapePressed", function(s) s:ClearFocus() end)
+    box:SetScript("OnEnterPressed", function(s) s:ClearFocus() end)
+    return box
+end

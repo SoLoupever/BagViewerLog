@@ -11,7 +11,8 @@ local CLASSES = {
     [Enum.ItemClass.Profession] = true,
 }
 
-local cache = {}
+local MAX_CACHE = 512
+local cache, size = {}, 0
 
 ns.ItemLevel = {}
 
@@ -24,7 +25,14 @@ function ns.ItemLevel.Get(entry)
     if ilvl == nil then
         ilvl = GetDetailedItemLevelInfo(link)
         -- Données pas encore en cache client : on réessaiera au prochain rendu.
-        if ilvl then cache[link] = ilvl end
+        if ilvl then
+            if size >= MAX_CACHE then
+                wipe(cache)
+                size = 0
+            end
+            cache[link] = ilvl
+            size = size + 1
+        end
     end
     return ilvl
 end

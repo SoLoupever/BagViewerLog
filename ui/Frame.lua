@@ -45,19 +45,10 @@ local function PlaceArea(area, host)
 end
 
 -- ── Disposition ───────────────────────────────────────────────────
--- Premier emplacement libre hors sac de composants.
-local function PickFree(free)
-    for i = 1, #free do
-        if free[i].bag < 5 then return free[i] end
-    end
-    return free[1]
-end
-
 function Layout()
     local contentH = Grid.Render(ns.Inventory.Get(), {
         holding    = ns.Cursor.GetItemID() ~= nil,
         showCustom = true,
-        pickFree   = PickFree,
     })
     content:SetHeight(contentH)
     -- La fenêtre suit le contenu, plafonnée à la hauteur de l'écran.

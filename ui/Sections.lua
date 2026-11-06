@@ -11,6 +11,10 @@ local SECTION_H = 18
 local ARROW_ATLAS = "common-icon-backarrow"
 local ROT_EXPANDED, ROT_COLLAPSED = math.pi / 2, math.pi   -- bas, droite
 
+local function Click(s)
+    s.onToggle(s.id)
+end
+
 local function Create(parent)
     local h = CreateFrame("Button", nil, parent)
     h:SetHeight(SECTION_H)
@@ -34,6 +38,7 @@ local function Create(parent)
     h.line:SetPoint("BOTTOMRIGHT", 0, 0)
     h.line:SetColorTexture(C.accentDim[1], C.accentDim[2], C.accentDim[3], 0.8)
 
+    h:SetScript("OnClick", Click)
     h:SetScript("OnEnter", function(s) s.arrow:SetVertexColor(1, 1, 1) end)
     h:SetScript("OnLeave", function(s)
         s.arrow:SetVertexColor(C.accent[1], C.accent[2], C.accent[3])
@@ -70,25 +75,39 @@ function ns.UI.NewSections()
 
     -- Place l'en-tête à la hauteur y (px sous le haut de parent).
     -- count : nombre ou texte. onToggle(id) au clic.
+    -- Mise en forme et textes réécrits seulement s'ils changent.
     function S.Acquire(parent, y, id, text, count, collapsed, onToggle)
         local h = Take(parent)
-        h.arrow:ClearAllPoints()
-        h.arrow:SetPoint("LEFT", h, "LEFT", 0, 0)
-        h.arrow:SetRotation(collapsed and ROT_COLLAPSED or ROT_EXPANDED)
-        h.arrow:Show()
-        h.line:ClearAllPoints()
-        h.line:SetPoint("BOTTOMLEFT", h, "BOTTOMLEFT", 0, 0)
-        h.line:SetPoint("BOTTOMRIGHT", h, "BOTTOMRIGHT", 0, 0)
-        h.line:Show()
-        h.count:Show()
-        h.label:ClearAllPoints()
-        h.label:SetPoint("LEFT", h.arrow, "RIGHT", 6, 0)
-        h.label:SetFontObject("GameFontNormal")
-        h.label:SetWidth(0)
-        h.label:SetText(text)
-        h.count:SetText("(" .. count .. ")")
-        h:EnableMouse(true)
-        h:SetScript("OnClick", function() onToggle(id) end)
+        h.id, h.onToggle = id, onToggle
+        if h.mode ~= "header" then
+            h.mode, h.text, h.countText, h.collapsed = "header", nil, nil, nil
+            h.arrow:ClearAllPoints()
+            h.arrow:SetPoint("LEFT", h, "LEFT", 0, 0)
+            h.arrow:Show()
+            h.line:ClearAllPoints()
+            h.line:SetPoint("BOTTOMLEFT", h, "BOTTOMLEFT", 0, 0)
+            h.line:SetPoint("BOTTOMRIGHT", h, "BOTTOMRIGHT", 0, 0)
+            h.line:Show()
+            h.count:Show()
+            h.label:ClearAllPoints()
+            h.label:SetPoint("LEFT", h.arrow, "RIGHT", 6, 0)
+            h.label:SetFontObject("GameFontNormal")
+            h.label:SetWidth(0)
+            h:EnableMouse(true)
+        end
+        collapsed = collapsed and true or false
+        if h.collapsed ~= collapsed then
+            h.collapsed = collapsed
+            h.arrow:SetRotation(collapsed and ROT_COLLAPSED or ROT_EXPANDED)
+        end
+        if h.text ~= text then
+            h.text = text
+            h.label:SetText(text)
+        end
+        if h.countText ~= count then
+            h.countText = count
+            h.count:SetText("(" .. count .. ")")
+        end
         Place(h, parent, y)
         return h
     end
@@ -97,18 +116,20 @@ function ns.UI.NewSections()
     -- l'appelant le positionne (SetPoint) et fixe sa largeur (SetLabelWidth).
     function S.AcquireLabel(parent, text)
         local h = Take(parent)
-        h.arrow:Hide()
-        h.line:Hide()
-        h.count:Hide()
-        h.label:ClearAllPoints()
-        h.label:SetPoint("LEFT", h, "LEFT", 0, 0)
-        h.label:SetFontObject("GameFontNormalSmall")
-        h.label:SetWidth(0)
-        h.label:SetText(text)
-        h.textW = h.label:GetStringWidth()
+        if h.mode ~= "label" or h.text ~= text then
+            h.mode, h.text = "label", text
+            h.arrow:Hide()
+            h.line:Hide()
+            h.count:Hide()
+            h.label:ClearAllPoints()
+            h.label:SetPoint("LEFT", h, "LEFT", 0, 0)
+            h.label:SetFontObject("GameFontNormalSmall")
+            h.label:SetWidth(0)
+            h.label:SetText(text)
+            h.textW = h.label:GetStringWidth()
+            h:EnableMouse(false)
+        end
         h:SetSize(h.textW + 2, SECTION_H)
-        h:EnableMouse(false)
-        h:SetScript("OnClick", nil)
         h:ClearAllPoints()
         h:Show()
         return h

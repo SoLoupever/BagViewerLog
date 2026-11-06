@@ -2,13 +2,9 @@ local addonName, ns = ...
 
 -- Emplacement "+" : déposer l'objet tenu au curseur classe cet objet dans la
 -- catégorie du "+" (l'objet retourne dans son sac, rien n'est déplacé).
+-- Une instance par cadre (sac, banque) : ns.UI.NewPlusSlots().
 
 local C = ns.UI.Colors
-
-ns.UI.PlusSlots = {}
-local P = ns.UI.PlusSlots
-
-local pool, used = {}, 0
 
 local function Drop(self)
     local itemID = ns.Cursor.GetItemID()
@@ -42,19 +38,26 @@ local function Create(parent)
     return b
 end
 
-function P.Reset()
-    for i = 1, used do pool[i]:Hide() end
-    used = 0
-end
+function ns.UI.NewPlusSlots()
+    local P = {}
+    local pool, used = {}, 0
 
-function P.Acquire(parent, catID)
-    used = used + 1
-    local b = pool[used]
-    if not b then
-        b = Create(parent)
-        pool[used] = b
+    function P.Reset()
+        for i = 1, used do pool[i]:Hide() end
+        used = 0
     end
-    b.catID = catID
-    b:Show()
-    return b
+
+    function P.Acquire(parent, catID)
+        used = used + 1
+        local b = pool[used]
+        if not b then
+            b = Create(parent)
+            pool[used] = b
+        end
+        b.catID = catID
+        b:Show()
+        return b
+    end
+
+    return P
 end

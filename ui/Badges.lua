@@ -1,9 +1,10 @@
 local addonName, ns = ...
 
--- Registre de pastilles de texte sur les boutons d'objet (niveau d'objet, clé...).
+-- Registre de pastilles sur les boutons d'objet (niveau d'objet, clé...).
 -- def = { id, point, offsetX, offsetY, font,
 --         get = function(entry) -> texte|nil, r, g, b }.
--- Une FontString par pastille et par bouton, créée à la demande.
+-- Pastille icône : def.atlas (+ size) ; get renvoie alors true|nil.
+-- Une FontString (ou Texture) par pastille et par bouton, créée à la demande.
 
 local defs = {}
 
@@ -21,12 +22,20 @@ function ns.UI.ApplyBadges(btn, entry)
             if not fs then
                 fsList = fsList or {}
                 btn.badges = fsList
-                fs = btn:CreateFontString(nil, "OVERLAY", d.font or "NumberFontNormal")
+                if d.atlas then
+                    fs = btn:CreateTexture(nil, "OVERLAY")
+                    fs:SetAtlas(d.atlas)
+                    fs:SetSize(d.size or 14, d.size or 14)
+                else
+                    fs = btn:CreateFontString(nil, "OVERLAY", d.font or "NumberFontNormal")
+                end
                 fs:SetPoint(d.point, d.offsetX or 0, d.offsetY or 0)
                 fsList[d.id] = fs
             end
-            fs:SetTextColor(r or 1, g or 1, b or 1)
-            fs:SetText(text)
+            if not d.atlas then
+                fs:SetTextColor(r or 1, g or 1, b or 1)
+                fs:SetText(text)
+            end
             fs:Show()
         elseif fs then
             fs:Hide()

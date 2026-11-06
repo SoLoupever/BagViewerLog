@@ -13,7 +13,11 @@ function ns.UI.NewItemButtons()
     local container
     local bagParents = {}   -- bagID -> frame (ID = bagID)
     local buttons    = {}   -- bagID -> { [slot] = button }
-    local active     = {}
+    local active, prev = {}, {}
+    local nActive, nPrev = 0, 0
+    local token = 0         -- rendu en cours
+    local cdFrame = CreateFrame("Frame")
+    local cdOn, cdQueued = false, false
 
     function IB.SetContainer(frame)
         container = frame
@@ -28,6 +32,36 @@ function ns.UI.NewItemButtons()
             bagParents[bag] = p
         end
         return p
+    end
+
+    -- Cooldowns : écoutés seulement si des boutons sont affichés.
+    local function SetCooldownEvent(on)
+        if on == cdOn then return end
+        cdOn = on
+        if on then cdFrame:RegisterEvent("BAG_UPDATE_COOLDOWN")
+        else cdFrame:UnregisterEvent("BAG_UPDATE_COOLDOWN") end
+    end
+
+    local function RefreshCooldowns()
+        cdQueued = false
+        for i = 1, nActive do
+            local btn = active[i]
+            local e = btn.entry
+            if e and e.icon then btn:UpdateCooldown(e.icon) end
+        end
+    end
+
+    cdFrame:SetScript("OnEvent", function()
+        if cdQueued then return end
+        cdQueued = true
+        C_Timer.After(0.1, RefreshCooldowns)
+    end)
+
+    -- Un rendu = Begin, Acquire..., Finish : les boutons déjà affichés le restent.
+    function IB.Begin()
+        active, prev = prev, active
+        nPrev, nActive = nActive, 0
+        token = token + 1
     end
 
     function IB.Acquire(bag, slot)
@@ -46,64 +80,109 @@ function ns.UI.NewItemButtons()
             btn.NewItemTexture:Hide()
             perBag[slot] = btn
         end
-        btn:Show()
-        active[#active + 1] = btn
+        if btn.token ~= token then
+            btn.token = token
+            if not btn:IsShown() then btn:Show() end
+            nActive = nActive + 1
+            active[nActive] = btn
+        end
         return btn
     end
 
-    function IB.ReleaseAll()
-        for i = #active, 1, -1 do
-            active[i]:Hide()
-            active[i].entry = nil
-            active[i] = nil
+    function IB.Finish()
+        for i = 1, nPrev do
+            local btn = prev[i]
+            if btn.token ~= token then
+                btn:Hide()
+                btn.entry, btn.mode = nil, nil
+            end
+            prev[i] = nil
         end
+        nPrev = 0
+        SetCooldownEvent(nActive > 0)
     end
 
-    -- entry = objet du snapshot (icon, count, link, quality, name) ou emplacement vide.
+    function IB.ReleaseAll()
+        for i = nActive, 1, -1 do
+            local btn = active[i]
+            btn:Hide()
+            btn.entry, btn.mode = nil, nil
+            active[i] = nil
+        end
+        nActive = 0
+        SetCooldownEvent(false)
+    end
+
+    -- entry = objet du snapshot (icon, count, link, quality) ou emplacement vide.
+    -- L'apparence Blizzard n'est réécrite que si l'objet affiché a changé.
     function IB.Set(btn, entry)
         btn.entry = entry
-        if btn.freeCount then btn.freeCount:Hide() end
-        ClearItemButtonOverlay(btn)
-        btn:SetHasItem(entry.icon)
-        btn:SetItemButtonTexture(entry.icon)
-        SetItemButtonQuality(btn, entry.quality, entry.link)
-        SetItemButtonCount(btn, entry.count)
-        btn:UpdateCooldown(entry.icon)
+        local id, count, link, quality = entry.id, entry.count, entry.link, entry.quality
+        if btn.mode ~= "item" or btn.sId ~= id or btn.sCount ~= count
+           or btn.sLink ~= link or btn.sQuality ~= quality then
+            btn.mode, btn.sId, btn.sCount, btn.sLink, btn.sQuality = "item", id, count, link, quality
+            if btn.freeCount then btn.freeCount:Hide() end
+            if btn.freeIcon then btn.freeIcon:Hide() end
+            ClearItemButtonOverlay(btn)
+            btn:SetHasItem(entry.icon)
+            btn:SetItemButtonTexture(entry.icon)
+            SetItemButtonQuality(btn, quality, link)
+            SetItemButtonCount(btn, count)
+            btn:UpdateCooldown(entry.icon)
+        end
         btn:SetMatchesSearch(ns.Search.Matches(entry))
         ns.UI.ApplyBadges(btn, entry)
     end
 
     -- Bouton d'un emplacement libre : sert de cible de dépôt, le nombre de libres
-    -- est écrit dans l'icône.
-    function IB.SetFree(btn, entry, numFree)
+    -- est écrit dans l'icône. reagent : fleur Blizzard en fond.
+    function IB.SetFree(btn, entry, numFree, reagent)
         btn.entry = entry
-        ClearItemButtonOverlay(btn)
-        btn:SetHasItem(nil)
-        btn:SetItemButtonTexture(nil)
-        SetItemButtonCount(btn, 0)
-        btn:SetMatchesSearch(true)
-        ns.UI.HideBadges(btn)
-        if not btn.freeCount then
-            btn.freeCount = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-            btn.freeCount:SetPoint("CENTER", 0, 0)
+        reagent = reagent or false
+        local fresh = btn.mode ~= "free"
+        if fresh then
+            btn.mode, btn.sId, btn.sCount, btn.sLink, btn.sQuality = "free", nil, nil, nil, nil
+            btn.sFree, btn.sReagent = nil, nil
+            ClearItemButtonOverlay(btn)
+            btn:SetHasItem(nil)
+            btn:SetItemButtonTexture(nil)
+            SetItemButtonCount(btn, 0)
+            btn:UpdateCooldown(nil)
+            ns.UI.HideBadges(btn)
         end
-        btn.freeCount:SetText(numFree)
-        btn.freeCount:Show()
+        btn:SetMatchesSearch(true)
+
+        if fresh or btn.sFree ~= numFree then
+            btn.sFree = numFree
+            if not btn.freeCount then
+                btn.freeCount = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+                btn.freeCount:SetPoint("CENTER", 0, 0)
+            end
+            btn.freeCount:SetText(numFree)
+            btn.freeCount:Show()
+        end
+
+        if fresh or btn.sReagent ~= reagent then
+            btn.sReagent = reagent
+            if reagent then
+                if not btn.freeIcon then
+                    btn.freeIcon = btn:CreateTexture(nil, "ARTWORK", nil, 3)
+                    btn.freeIcon:SetAtlas("bags-icon-reagents")
+                    btn.freeIcon:SetSize(24, 24)
+                    btn.freeIcon:SetPoint("CENTER")
+                    btn.freeIcon:SetAlpha(0.4)
+                end
+                btn.freeIcon:Show()
+            elseif btn.freeIcon then
+                btn.freeIcon:Hide()
+            end
+        end
     end
 
     ns.On("SEARCH_CHANGED", function()
-        for i = 1, #active do
+        for i = 1, nActive do
             local btn = active[i]
             if btn.entry then btn:SetMatchesSearch(ns.Search.Matches(btn.entry)) end
-        end
-    end)
-
-    local cdFrame = CreateFrame("Frame")
-    cdFrame:RegisterEvent("BAG_UPDATE_COOLDOWN")
-    cdFrame:SetScript("OnEvent", function()
-        for i = 1, #active do
-            local btn = active[i]
-            if btn.entry then btn:UpdateCooldown(btn.entry.icon) end
         end
     end)
 
