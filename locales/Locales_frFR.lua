@@ -36,6 +36,8 @@ ns.locales["frFR"] = {
     BAGS_EMPTY_SLOT      = "Emplacement de sac vide",
     BAGS_REAGENT         = "Emplacement du sac de composants",
     PLUS_TIP             = "Dépose un objet ici pour le classer dans cette catégorie.",
+    VENDOR_SELL_TIP      = "Clic droit : vendre jusqu'à %d objets de cette catégorie",
+    VENDOR_NOTHING       = "Aucun objet vendable dans cette catégorie",
 
     VIEW_TITLE         = "Affichage",
     VIEW_CATEGORY      = "Catégories",

@@ -7,6 +7,9 @@
 ## RequiredDeps: ViewerLog, ViewerLog_Items
 ## IconTexture: Interface\AddOns\BagViewerLog\BVL_Logo.blp
 
+## X-Curse-Project-ID:1791933
+## X-Wago-ID:XKqEZjKy
+
 ## ── NOYAU ─────────────────────────────────────────────────────────
 core\Init.lua
 core\Settings.lua
@@ -33,6 +36,7 @@ modules\Assign.lua
 modules\ItemLevel.lua
 modules\Reagent.lua
 modules\Keystone.lua
+modules\Vendor.lua
 modules\Hearthstone.lua
 modules\Toy.lua
 modules\EquipSets.lua

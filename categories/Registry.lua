@@ -3,7 +3,8 @@ local addonName, ns = ...
 -- Registre de catégories. Un module ajoute la sienne via ns.RegisterCategory.
 -- def = { id, labelKey | label (texte libre), order (affichage), priority
 --         (résolution, bas = d'abord), match = function(item) -> bool,
---         parent (id d'une catégorie racine), noAssign, custom }.
+--         parent (id d'une catégorie racine), noAssign, custom,
+--         noBulk (exclue des actions de groupe au clic droit) }.
 -- Sans match : catégorie de repli ou manuelle.
 -- Surcharges : ns.RegisterOverride(fn(item) -> id|nil), prioritaires.
 -- Règles : ns.RegisterRule({ category, priority, match }) classe dans une

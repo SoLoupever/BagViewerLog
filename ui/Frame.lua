@@ -165,7 +165,7 @@ local function Build()
     IB.SetContainer(content)
     Grid = ns.UI.NewCategoryGrid({
         content = content, IB = IB, Sections = ns.UI.NewSections(),
-        cols = 15, prefix = "", refresh = Layout, usePlus = true,
+        cols = 15, prefix = "", refresh = Layout, usePlus = true, context = true,
     })
     Apply()
     frame:SetHeight(M.topChrome + M.bottomChrome)

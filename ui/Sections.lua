@@ -3,6 +3,8 @@ local addonName, ns = ...
 -- En-têtes de catégorie (réutilisés). Clic = replier / déplier.
 -- Sous-catégories : simple libellé (sans flèche, ligne ni compteur).
 -- Flèche : atlas du Housing (common-icon-backarrow), tournée selon l'état.
+-- Clic droit / infobulle : seulement si S.SetContext(onClick, onTip) est posé et
+-- si l'en-tête ou le libellé reçoit un ctx (valeur opaque rendue aux rappels).
 -- Une instance par cadre (sac, banque) : ns.UI.NewSections().
 
 local C = ns.UI.Colors
@@ -11,8 +13,12 @@ local SECTION_H = 18   -- défaut ; SetHeight le change
 local ARROW_ATLAS = "common-icon-backarrow"
 local ROT_EXPANDED, ROT_COLLAPSED = math.pi / 2, math.pi   -- bas, droite
 
-local function Click(s)
-    s.onToggle(s.id)
+local function Click(s, button)
+    if button == "RightButton" then
+        if s.ctx and s.onContext then s.onContext(s.ctx) end
+    elseif s.mode == "header" then
+        s.onToggle(s.id)
+    end
 end
 
 local function Create(parent, height)
@@ -38,10 +44,15 @@ local function Create(parent, height)
     h.line:SetPoint("BOTTOMRIGHT", 0, 0)
     h.line:SetColorTexture(C.accentDim[1], C.accentDim[2], C.accentDim[3], 0.8)
 
+    h:RegisterForClicks("LeftButtonUp", "RightButtonUp")
     h:SetScript("OnClick", Click)
-    h:SetScript("OnEnter", function(s) s.arrow:SetVertexColor(1, 1, 1) end)
+    h:SetScript("OnEnter", function(s)
+        s.arrow:SetVertexColor(1, 1, 1)
+        if s.ctx and s.onTip then s.onTip(s, s.ctx) end
+    end)
     h:SetScript("OnLeave", function(s)
         s.arrow:SetVertexColor(C.accent[1], C.accent[2], C.accent[3])
+        if GameTooltip:GetOwner() == s then GameTooltip:Hide() end
     end)
 
     return h
@@ -51,6 +62,12 @@ function ns.UI.NewSections()
     local S = {}
     local pool, used = {}, 0
     local sectionH = SECTION_H
+    local onContext, onTip
+
+    -- Rappels du clic droit et de l'infobulle, appelés avec le ctx de l'élément.
+    function S.SetContext(click, tip)
+        onContext, onTip = click, tip
+    end
 
     -- Hauteur des en-têtes et libellés (profil de dimensions).
     function S.SetHeight(height)
@@ -82,11 +99,12 @@ function ns.UI.NewSections()
     end
 
     -- Place l'en-tête à la hauteur y (px sous le haut de parent).
-    -- count : nombre ou texte. onToggle(id) au clic.
+    -- count : nombre ou texte. onToggle(id) au clic. ctx : clic droit (optionnel).
     -- Mise en forme et textes réécrits seulement s'ils changent.
-    function S.Acquire(parent, y, id, text, count, collapsed, onToggle)
+    function S.Acquire(parent, y, id, text, count, collapsed, onToggle, ctx)
         local h = Take(parent)
         h.id, h.onToggle = id, onToggle
+        h.ctx, h.onContext, h.onTip = ctx, onContext, onTip
         if h.mode ~= "header" then
             h.mode, h.text, h.countText, h.collapsed = "header", nil, nil, nil
             h.arrow:ClearAllPoints()
@@ -101,6 +119,7 @@ function ns.UI.NewSections()
             h.label:SetPoint("LEFT", h.arrow, "RIGHT", 6, 0)
             h.label:SetFontObject("GameFontNormal")
             h.label:SetWidth(0)
+            h.mouse = true
             h:EnableMouse(true)
         end
         collapsed = collapsed and true or false
@@ -120,10 +139,12 @@ function ns.UI.NewSections()
         return h
     end
 
-    -- Libellé de bloc : texte seul, non cliquable. h.textW = largeur du texte ;
-    -- l'appelant le positionne (SetPoint) et fixe sa largeur (SetLabelWidth).
-    function S.AcquireLabel(parent, text)
+    -- Libellé de bloc : texte seul, cliquable (droit) seulement avec un ctx.
+    -- h.textW = largeur du texte ; l'appelant le positionne (SetPoint) et fixe
+    -- sa largeur (SetLabelWidth).
+    function S.AcquireLabel(parent, text, ctx)
         local h = Take(parent)
+        h.ctx, h.onContext, h.onTip = ctx, onContext, onTip
         if h.mode ~= "label" or h.text ~= text then
             h.mode, h.text = "label", text
             h.arrow:Hide()
@@ -135,7 +156,11 @@ function ns.UI.NewSections()
             h.label:SetWidth(0)
             h.label:SetText(text)
             h.textW = h.label:GetStringWidth()
-            h:EnableMouse(false)
+        end
+        local mouse = ctx ~= nil and onContext ~= nil
+        if h.mouse ~= mouse then
+            h.mouse = mouse
+            h:EnableMouse(mouse)
         end
         h:SetSize(h.textW + 2, sectionH)
         h:ClearAllPoints()

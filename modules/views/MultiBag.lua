@@ -20,7 +20,7 @@ local out = {}
 
 ns.View.Register({
     id = "multibag", labelKey = "VIEW_MULTIBAG", order = 3,
-    noFree = true, stack = false,
+    noFree = true, stack = false, bulk = false,
     tops   = function() return TOPS end,
     groups = function(snap)
         local bags = ns.View.GetSlots(snap)

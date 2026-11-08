@@ -3,7 +3,8 @@ local addonName, ns = ...
 -- Modes d'affichage du sac (catégories, un seul sac, multi-sacs).
 -- def = { id, order, labelKey, tops() -> blocs racines, children(id) (optionnel),
 --         groups(snap) -> { blocID -> entrées }, noFree (pas de bloc "Vide"),
---         stack = false (pas de fusion des armes identiques) }.
+--         stack = false (pas de fusion des armes identiques),
+--         bulk = false (pas d'action de groupe au clic droit sur un bloc) }.
 -- Un bloc avec header = true est une section à en-tête (def.count(liste) -> texte).
 -- Une vue ne change que la présentation : le classement reste dans ns.Inventory.
 

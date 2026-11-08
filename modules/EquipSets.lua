@@ -20,7 +20,7 @@ end
 
 ns.RegisterCategory({
     id = "equipsets", labelKey = "CAT_EQUIPSETS", order = 21, priority = 55,
-    parent = "equipment",
+    parent = "equipment", noBulk = true,
     match = function(item)
         if not item.id then return false end
         if not inSet then Build() end

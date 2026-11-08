@@ -6,7 +6,10 @@ local addonName, ns = ...
 -- blocs. Les blocs sont répartis en rangées de hauteur minimale (Pack).
 -- Une instance par cadre : ns.UI.NewCategoryGrid(cfg).
 -- cfg = { content, IB, Sections, cols, prefix (clé des repliés), refresh,
---         usePlus (emplacements "+") }.
+--         usePlus (emplacements "+"), context (clic droit sur une catégorie) }.
+-- Clic droit : publie CATEGORY_CONTEXT(def, entrées) et, au survol,
+-- CATEGORY_CONTEXT_TIP(infobulle, def). Pas pour une catégorie repliée, noBulk,
+-- ni une vue qui refuse "bulk" ; les sous-catégories noBulk sont exclues.
 -- Dimensions : profil ns.UI.GetMetrics, changé par G.SetMetrics(m). Sans appel,
 -- profil standard avec cfg.cols colonnes.
 -- G.Render renvoie la hauteur et la largeur utilisées (le cadre s'y adapte).
@@ -14,7 +17,7 @@ local addonName, ns = ...
 
 local EMPTY = {}
 local INF = math.huge
-local FREE_DEF = { id = "free", noAssign = true }
+local FREE_DEF = { id = "free", noAssign = true, noBulk = true }
 local function NoKids() return EMPTY end
 
 function ns.UI.NewCategoryGrid(cfg)
@@ -28,8 +31,10 @@ function ns.UI.NewCategoryGrid(cfg)
     local BLOCK_TAIL, HEAD_TAIL, MIN_COLS, LABEL_MAX_W
 
     -- État du rendu en cours.
-    local collapsed, holding, showCustom, pickFree
+    local collapsed, holding, showCustom, pickFree, bulk
     local y, usedW = 0, 0
+    local headCtx, nHead = {}, 0  -- ctx des en-têtes : { def, list, kids, groups }
+    local gathered = {}           -- entrées rassemblées au clic droit
     local freeSlots = { {}, {} }  -- { slot, num, reagent } réutilisés
     local run, nRun = {}, 0       -- blocs consécutifs sans sous-catégorie
     local sub, nSub = {}, 0       -- blocs des sous-catégories
@@ -60,6 +65,31 @@ function ns.UI.NewCategoryGrid(cfg)
         c[key] = (not c[key]) or nil
         cfg.refresh()
     end
+
+    -- ── Clic droit ────────────────────────────────────────────────
+    -- ctx = bloc (def, list) ou ctx d'en-tête (def, list, kids, groups).
+    local function ContextClick(ctx)
+        wipe(gathered)
+        local list = ctx.list
+        for i = 1, #list do gathered[#gathered + 1] = list[i] end
+        if ctx.kids then
+            for _, kid in ipairs(ctx.kids) do
+                if not kid.noBulk then
+                    local kl = ctx.groups[kid.id] or EMPTY
+                    for i = 1, #kl do gathered[#gathered + 1] = kl[i] end
+                end
+            end
+        end
+        ns.Fire("CATEGORY_CONTEXT", ctx.def, gathered)
+    end
+
+    local function ContextTip(owner, ctx)
+        GameTooltip:SetOwner(owner, "ANCHOR_TOP")
+        ns.Fire("CATEGORY_CONTEXT_TIP", GameTooltip, ctx.def)
+        if GameTooltip:NumLines() > 0 then GameTooltip:Show() else GameTooltip:Hide() end
+    end
+
+    if cfg.context then Sections.SetContext(ContextClick, ContextTip) end
 
     -- ── Répartition en rangées ────────────────────────────────────
     local function BlockWidth(b, cols)
@@ -217,7 +247,8 @@ function ns.UI.NewCategoryGrid(cfg)
     local function Flow(blocks, n)
         for k = 1, n do
             local b = blocks[k]
-            b.label = Sections.AcquireLabel(content, b.text)
+            b.label = Sections.AcquireLabel(content, b.text,
+                (bulk and not b.def.noBulk) and b or nil)
             b.lw = math.min(b.label.textW, LABEL_MAX_W)
             b.hi = math.min(COLS, math.max(b.count, 1))
             b.lo = math.min(b.hi, MIN_COLS)
@@ -242,11 +273,25 @@ function ns.UI.NewCategoryGrid(cfg)
         return top - y
     end
 
-    -- true si la catégorie est repliée.
-    local function Header(id, label, count)
+    -- ctx du clic droit pour un en-tête (nil : pas de vente groupée).
+    local function HeadContext(def, direct, kids, groups)
+        if not bulk or def.noBulk then return nil end
+        nHead = nHead + 1
+        local c = headCtx[nHead]
+        if not c then
+            c = {}
+            headCtx[nHead] = c
+        end
+        c.def, c.list, c.kids, c.groups = def, direct, kids, groups
+        return c
+    end
+
+    -- true si la catégorie est repliée (ses objets cachés ne se vendent pas).
+    local function Header(id, label, count, ctx)
         local key = cfg.prefix .. id
         local isCollapsed = collapsed[key]
-        Sections.Acquire(content, y, key, label, count, isCollapsed, Toggle)
+        Sections.Acquire(content, y, key, label, count, isCollapsed, Toggle,
+                         (not isCollapsed) and ctx or nil)
         y = y + SECTION_H + HEAD_TAIL
         return isCollapsed
     end
@@ -272,10 +317,11 @@ function ns.UI.NewCategoryGrid(cfg)
         collapsed = ns.Settings.Table("collapsed")
         holding = cfg.usePlus and opts.holding
         showCustom, pickFree = opts.showCustom, opts.pickFree
-        y, usedW, nRun, nBlock, flowIdx = 0, 0, 0, 0, 0
+        y, usedW, nRun, nBlock, flowIdx, nHead = 0, 0, 0, 0, 0, 0
 
         -- Vue (ns.View) : catégories racines, enfants et regroupement.
         local view = opts.view
+        bulk = cfg.context and (not view or view.bulk ~= false)
         local groups = view and view.groups(snap) or snap.groups
         local childrenOf = view and (view.children or NoKids) or ns.GetChildren
         local noFree = view and view.noFree
@@ -295,7 +341,8 @@ function ns.UI.NewCategoryGrid(cfg)
                 else
                     Flush()
                     if not Header(def.id, ns.GetCategoryLabel(def),
-                                  def.count and def.count(direct) or total) then
+                                  def.count and def.count(direct) or total,
+                                  HeadContext(def, direct, kids, groups)) then
                         y = y + Grid(direct, def, 0, y, COLS)
                         nSub = 0
                         for _, kid in ipairs(kids) do

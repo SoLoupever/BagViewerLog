@@ -36,6 +36,8 @@ ns.locales["enUS"] = {
     BAGS_EMPTY_SLOT      = "Empty bag slot",
     BAGS_REAGENT         = "Reagent bag slot",
     PLUS_TIP             = "Drop an item here to file it in this category.",
+    VENDOR_SELL_TIP      = "Right-click: sell up to %d items from this category",
+    VENDOR_NOTHING       = "No sellable item in this category",
 
     VIEW_TITLE         = "View",
     VIEW_CATEGORY      = "Categories",
