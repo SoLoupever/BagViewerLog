@@ -180,7 +180,7 @@ frame:SetScript("OnEvent", function()
 end)
 
 -- Ces événements changent le classement des objets.
-for _, ev in ipairs({ "ASSIGN_CHANGED", "CATEGORIES_CHANGED" }) do
+for _, ev in ipairs({ "ASSIGN_CHANGED", "CATEGORIES_CHANGED", "VIEW_CHANGED" }) do
     ns.On(ev, function()
         if active then Rebuild(true) end
     end)

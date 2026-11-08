@@ -38,13 +38,23 @@ modules\Toy.lua
 modules\EquipSets.lua
 modules\Custom.lua
 modules\Order.lua
+modules\Compact.lua
+modules\View.lua
+modules\views\Category.lua
+modules\views\OneBag.lua
+modules\views\MultiBag.lua
 modules\bank\Character.lua
 modules\bank\Warband.lua
 
 ## ── UI ────────────────────────────────────────────────────────────
 ui\Theme.lua
+ui\Metrics.lua
+ui\metrics\Standard.lua
+ui\metrics\Compact.lua
 ui\Skin.lua
 ui\Registry.lua
+ui\options\Registry.lua
+ui\options\Compact.lua
 ui\Badges.lua
 ui\badges\ItemLevel.lua
 ui\badges\Keystone.lua
@@ -56,6 +66,9 @@ ui\CategoryGrid.lua
 ui\widgets\SearchBox.lua
 ui\widgets\SortButton.lua
 ui\widgets\MenuButton.lua
+ui\widgets\BagsButton.lua
+ui\widgets\OptionsButton.lua
+ui\widgets\ViewList.lua
 ui\widgets\CloseButton.lua
 ui\widgets\Money.lua
 ui\Frame.lua
@@ -63,6 +76,8 @@ ui\BankFrame.lua
 ui\menu\CategoryList.lua
 ui\menu\ItemList.lua
 ui\CategoryMenu.lua
+ui\OptionsMenu.lua
+ui\BagBar.lua
 
 ## ── REMPLACEMENT DU SAC BLIZZARD (en dernier) ─────────────────────
 core\Replace.lua

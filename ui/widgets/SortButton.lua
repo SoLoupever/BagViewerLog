@@ -3,10 +3,10 @@ local addonName, ns = ...
 -- Bouton de tri (icône et action Blizzard : C_Container.SortBags).
 
 ns.UI.RegisterWidget({
-    id = "sort", area = "toolbar", side = "right", order = 1,
+    id = "sort", area = "title", side = "right", order = 3,
     build = function(parent)
         local b = CreateFrame("Button", nil, parent)
-        b:SetSize(28, 26)
+        b:SetSize(26, 26)
         b:SetNormalAtlas("bags-button-autosort-up")
         b:SetPushedAtlas("bags-button-autosort-down")
         b:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")

@@ -49,5 +49,6 @@ local function Merge(list)
 end
 
 ns.On("INVENTORY_GROUPED", function(groups)
+    if not ns.View.Allows("stack") then return end
     for _, list in pairs(groups) do Merge(list) end
 end)

@@ -13,9 +13,9 @@ local function Drop(self)
     ClearCursor()
 end
 
-local function Create(parent)
+local function Create(parent, size)
     local b = ns.UI.Flat(parent, "inner", "innerBorder", "Button")
-    b:SetSize(37, 37)
+    b:SetSize(size, size)
     b:RegisterForClicks("LeftButtonUp")
 
     local plus = b:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")
@@ -41,6 +41,13 @@ end
 function ns.UI.NewPlusSlots()
     local P = {}
     local pool, used = {}, 0
+    local size = 37
+
+    function P.SetSize(s)
+        if s == size then return end
+        size = s
+        for i = 1, #pool do pool[i]:SetSize(s, s) end
+    end
 
     function P.Reset()
         for i = 1, used do pool[i]:Hide() end
@@ -51,7 +58,7 @@ function ns.UI.NewPlusSlots()
         used = used + 1
         local b = pool[used]
         if not b then
-            b = Create(parent)
+            b = Create(parent, size)
             pool[used] = b
         end
         b.catID = catID

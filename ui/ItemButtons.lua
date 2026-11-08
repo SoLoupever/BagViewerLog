@@ -16,11 +16,21 @@ function ns.UI.NewItemButtons()
     local active, prev = {}, {}
     local nActive, nPrev = 0, 0
     local token = 0         -- rendu en cours
+    local slotSize = 37
     local cdFrame = CreateFrame("Frame")
     local cdOn, cdQueued = false, false
 
     function IB.SetContainer(frame)
         container = frame
+    end
+
+    -- Taille des boutons (profil de dimensions) : existants et à venir.
+    function IB.SetSlotSize(size)
+        if size == slotSize then return end
+        slotSize = size
+        for _, perBag in pairs(buttons) do
+            for _, btn in pairs(perBag) do btn:SetSize(size, size) end
+        end
     end
 
     local function GetBagParent(bag)
@@ -75,6 +85,7 @@ function ns.UI.NewItemButtons()
             btn = CreateFrame("ItemButton", nil, GetBagParent(bag), "ContainerFrameItemButtonTemplate")
             btn:SetBagID(bag)
             btn:SetID(slot)
+            btn:SetSize(slotSize, slotSize)
             -- Visible par défaut dans le template ; Blizzard la masque lui-même.
             btn.BattlepayItemTexture:Hide()
             btn.NewItemTexture:Hide()
@@ -116,6 +127,7 @@ function ns.UI.NewItemButtons()
     -- entry = objet du snapshot (icon, count, link, quality) ou emplacement vide.
     -- L'apparence Blizzard n'est réécrite que si l'objet affiché a changé.
     function IB.Set(btn, entry)
+        if not entry.id then return IB.SetEmpty(btn, entry) end
         btn.entry = entry
         local id, count, link, quality = entry.id, entry.count, entry.link, entry.quality
         if btn.mode ~= "item" or btn.sId ~= id or btn.sCount ~= count
@@ -132,6 +144,24 @@ function ns.UI.NewItemButtons()
         end
         btn:SetMatchesSearch(ns.Search.Matches(entry))
         ns.UI.ApplyBadges(btn, entry)
+    end
+
+    -- Emplacement vide (vues par sac) : reste un vrai bouton, cible de dépôt.
+    function IB.SetEmpty(btn, entry)
+        btn.entry = entry
+        if btn.mode ~= "empty" then
+            btn.mode, btn.sId, btn.sCount, btn.sLink, btn.sQuality = "empty", nil, nil, nil, nil
+            btn.sFree, btn.sReagent = nil, nil
+            if btn.freeCount then btn.freeCount:Hide() end
+            if btn.freeIcon then btn.freeIcon:Hide() end
+            btn:SetHasItem(nil)
+            btn:SetItemButtonTexture(nil)
+            SetItemButtonQuality(btn, nil, nil)
+            SetItemButtonCount(btn, 0)
+            btn:UpdateCooldown(nil)
+            ns.UI.HideBadges(btn)
+        end
+        btn:SetMatchesSearch(true)
     end
 
     -- Bouton d'un emplacement libre : sert de cible de dépôt, le nombre de libres
@@ -155,8 +185,8 @@ function ns.UI.NewItemButtons()
         if fresh or btn.sFree ~= numFree then
             btn.sFree = numFree
             if not btn.freeCount then
-                btn.freeCount = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-                btn.freeCount:SetPoint("CENTER", 0, 0)
+                btn.freeCount = btn:CreateFontString(nil, "OVERLAY", "NumberFontNormal")
+                btn.freeCount:SetPoint("BOTTOMRIGHT", -5, 5)
             end
             btn.freeCount:SetText(numFree)
             btn.freeCount:Show()
@@ -168,9 +198,9 @@ function ns.UI.NewItemButtons()
                 if not btn.freeIcon then
                     btn.freeIcon = btn:CreateTexture(nil, "ARTWORK", nil, 3)
                     btn.freeIcon:SetAtlas("bags-icon-reagents")
-                    btn.freeIcon:SetSize(24, 24)
+                    btn.freeIcon:SetSize(26, 26)
                     btn.freeIcon:SetPoint("CENTER")
-                    btn.freeIcon:SetAlpha(0.4)
+                    btn.freeIcon:SetAlpha(0.9)
                 end
                 btn.freeIcon:Show()
             elseif btn.freeIcon then

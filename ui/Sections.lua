@@ -7,7 +7,7 @@ local addonName, ns = ...
 
 local C = ns.UI.Colors
 
-local SECTION_H = 18
+local SECTION_H = 18   -- défaut ; SetHeight le change
 local ARROW_ATLAS = "common-icon-backarrow"
 local ROT_EXPANDED, ROT_COLLAPSED = math.pi / 2, math.pi   -- bas, droite
 
@@ -15,9 +15,9 @@ local function Click(s)
     s.onToggle(s.id)
 end
 
-local function Create(parent)
+local function Create(parent, height)
     local h = CreateFrame("Button", nil, parent)
-    h:SetHeight(SECTION_H)
+    h:SetHeight(height)
 
     h.arrow = h:CreateTexture(nil, "ARTWORK")
     h.arrow:SetSize(14, 14)
@@ -50,6 +50,14 @@ end
 function ns.UI.NewSections()
     local S = {}
     local pool, used = {}, 0
+    local sectionH = SECTION_H
+
+    -- Hauteur des en-têtes et libellés (profil de dimensions).
+    function S.SetHeight(height)
+        if height == sectionH then return end
+        sectionH = height
+        for i = 1, #pool do pool[i]:SetHeight(height) end
+    end
 
     function S.Reset()
         for i = 1, used do pool[i]:Hide() end
@@ -60,7 +68,7 @@ function ns.UI.NewSections()
         used = used + 1
         local h = pool[used]
         if not h then
-            h = Create(parent)
+            h = Create(parent, sectionH)
             pool[used] = h
         end
         return h
@@ -129,7 +137,7 @@ function ns.UI.NewSections()
             h.textW = h.label:GetStringWidth()
             h:EnableMouse(false)
         end
-        h:SetSize(h.textW + 2, SECTION_H)
+        h:SetSize(h.textW + 2, sectionH)
         h:ClearAllPoints()
         h:Show()
         return h

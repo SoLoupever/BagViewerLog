@@ -7,34 +7,53 @@ local addonName, ns = ...
 -- Une instance par cadre : ns.UI.NewCategoryGrid(cfg).
 -- cfg = { content, IB, Sections, cols, prefix (clé des repliés), refresh,
 --         usePlus (emplacements "+") }.
-
-local SLOT, GAP = 37, 4
-local CELL = SLOT + GAP
-local SECTION_H, SECTION_GAP = 18, 10
-local LABEL_H = SECTION_H + 6
-local GROUP_GAP = 14      -- espace entre deux blocs d'une même rangée
-local MIN_COLS = 3        -- colonnes minimales d'un bloc réduit
-local LABEL_MAX_W = 64    -- au-delà, le libellé est tronqué
+-- Dimensions : profil ns.UI.GetMetrics, changé par G.SetMetrics(m). Sans appel,
+-- profil standard avec cfg.cols colonnes.
+-- G.Render renvoie la hauteur et la largeur utilisées (le cadre s'y adapte).
+-- Emplacements libres : un seul bloc en bas, une icône par type de sac.
 
 local EMPTY = {}
 local INF = math.huge
 local FREE_DEF = { id = "free", noAssign = true }
+local function NoKids() return EMPTY end
 
 function ns.UI.NewCategoryGrid(cfg)
     local G = {}
     local content, IB, Sections = cfg.content, cfg.IB, cfg.Sections
-    local COLS = cfg.cols
     local Plus = cfg.usePlus and ns.UI.NewPlusSlots()
-    local MAX_W = COLS * CELL - GAP
+
+    -- Dimensions du profil courant.
+    local COLS, SLOT, GAP, CELL, MAX_W
+    local SECTION_H, SECTION_GAP, LABEL_H, GROUP_GAP
+    local BLOCK_TAIL, HEAD_TAIL, MIN_COLS, LABEL_MAX_W
 
     -- État du rendu en cours.
     local collapsed, holding, showCustom, pickFree
-    local y = 0
+    local y, usedW = 0, 0
+    local freeSlots = { {}, {} }  -- { slot, num, reagent } réutilisés
     local run, nRun = {}, 0       -- blocs consécutifs sans sous-catégorie
     local sub, nSub = {}, 0       -- blocs des sous-catégories
     local blockPool, nBlock = {}, 0
     local packCache, flowIdx = {}, 0
     local tmp = {}                -- colonnes candidates (FitRow)
+
+    local function Apply(m, cols)
+        COLS, SLOT, GAP = cols or m.cols, m.slot, m.gap
+        CELL = SLOT + GAP
+        MAX_W = COLS * CELL - GAP
+        SECTION_H, SECTION_GAP, GROUP_GAP = m.sectionH, m.sectionGap, m.groupGap
+        LABEL_H = SECTION_H + m.labelPad
+        BLOCK_TAIL, HEAD_TAIL = m.blockTail, m.headerTail
+        MIN_COLS, LABEL_MAX_W = m.minCols, m.labelMaxW
+        wipe(packCache)   -- la répartition dépend des dimensions
+        IB.SetSlotSize(SLOT)
+        Sections.SetHeight(SECTION_H)
+        if Plus then Plus.SetSize(SLOT) end
+    end
+
+    function G.SetMetrics(m)
+        Apply(m)
+    end
 
     local function Toggle(key)
         local c = ns.Settings.Table("collapsed")
@@ -75,7 +94,7 @@ function ns.UI.NewCategoryGrid(cfg)
                 for k = i, j do
                     rows = math.max(rows, math.ceil(blocks[k].count / tmp[k]))
                 end
-                return LABEL_H + (rows > 0 and rows * CELL - GAP + 6 or 0)
+                return LABEL_H + (rows > 0 and rows * CELL - GAP + BLOCK_TAIL or 0)
             end
         end
         return INF
@@ -163,16 +182,21 @@ function ns.UI.NewCategoryGrid(cfg)
             widget:SetPoint("TOPLEFT", content, "TOPLEFT", x, py)
         end
         if total == 0 then return 0 end
-        return math.ceil(total / cols) * CELL - GAP + 6
+        local w = math.min(total, cols) * CELL - GAP
+        if x0 + w > usedW then usedW = x0 + w end
+        return math.ceil(total / cols) * CELL - GAP + BLOCK_TAIL
     end
 
     local function PlaceItems(b, x0, y0, cols)
-        if b.free then
-            local btn = IB.Acquire(b.free.bag, b.free.slot)
-            btn:ClearAllPoints()
-            btn:SetPoint("TOPLEFT", content, "TOPLEFT", x0, -y0)
-            IB.SetFree(btn, b.free, b.numFree, b.reagent)
-            return SLOT + 6
+        if b.frees then
+            for i = 1, b.count do
+                local f = b.frees[i]
+                local btn = IB.Acquire(f.slot.bag, f.slot.slot)
+                btn:ClearAllPoints()
+                btn:SetPoint("TOPLEFT", content, "TOPLEFT", x0 + (i - 1) * CELL, -y0)
+                IB.SetFree(btn, f.slot, f.num, f.reagent)
+            end
+            return SLOT + BLOCK_TAIL
         end
         return Grid(b.list, b.def, x0, y0, cols)
     end
@@ -185,7 +209,7 @@ function ns.UI.NewCategoryGrid(cfg)
             blockPool[nBlock] = b
         end
         b.def, b.list, b.text, b.count = def, list, text, Count(list, def)
-        b.free, b.numFree, b.reagent = nil, nil, nil
+        b.frees = nil
         return b
     end
 
@@ -212,6 +236,7 @@ function ns.UI.NewCategoryGrid(cfg)
                 PlaceItems(b, x, top + LABEL_H, r.cols[k])
                 x = x + w + GROUP_GAP
             end
+            if x - GROUP_GAP > usedW then usedW = x - GROUP_GAP end
             top = top + r.h
         end
         return top - y
@@ -222,7 +247,7 @@ function ns.UI.NewCategoryGrid(cfg)
         local key = cfg.prefix .. id
         local isCollapsed = collapsed[key]
         Sections.Acquire(content, y, key, label, count, isCollapsed, Toggle)
-        y = y + SECTION_H + 6
+        y = y + SECTION_H + HEAD_TAIL
         return isCollapsed
     end
 
@@ -236,8 +261,9 @@ function ns.UI.NewCategoryGrid(cfg)
         nRun = 0
     end
 
-    -- snap = { groups, free, freeReagent }. opts = { holding, showCustom, pickFree(free) }.
-    -- Renvoie la hauteur utilisée.
+    -- snap = { groups, free, freeReagent }.
+    -- opts = { holding, showCustom, pickFree(free), view (ns.View, sinon catégories) }.
+    -- Renvoie la hauteur et la largeur utilisées.
     function G.Render(snap, opts)
         IB.Begin()
         Sections.Reset()
@@ -246,27 +272,34 @@ function ns.UI.NewCategoryGrid(cfg)
         collapsed = ns.Settings.Table("collapsed")
         holding = cfg.usePlus and opts.holding
         showCustom, pickFree = opts.showCustom, opts.pickFree
-        y, nRun, nBlock, flowIdx = 0, 0, 0, 0
+        y, usedW, nRun, nBlock, flowIdx = 0, 0, 0, 0, 0
 
-        for _, def in ipairs(ns.GetTopCategories()) do
-            local direct = snap.groups[def.id] or EMPTY
-            local kids = ns.GetChildren(def.id)
+        -- Vue (ns.View) : catégories racines, enfants et regroupement.
+        local view = opts.view
+        local groups = view and view.groups(snap) or snap.groups
+        local childrenOf = view and (view.children or NoKids) or ns.GetChildren
+        local noFree = view and view.noFree
+
+        for _, def in ipairs(view and view.tops() or ns.GetTopCategories()) do
+            local direct = groups[def.id] or EMPTY
+            local kids = childrenOf(def.id)
             local total = #direct
             for _, kid in ipairs(kids) do
-                total = total + #(snap.groups[kid.id] or EMPTY)
+                total = total + #(groups[kid.id] or EMPTY)
             end
 
             if Visible(def, total) then
-                if #kids == 0 then
+                if #kids == 0 and not def.header then
                     nRun = nRun + 1
                     run[nRun] = NewBlock(def, direct, ns.GetCategoryLabel(def))
                 else
                     Flush()
-                    if not Header(def.id, ns.GetCategoryLabel(def), total) then
+                    if not Header(def.id, ns.GetCategoryLabel(def),
+                                  def.count and def.count(direct) or total) then
                         y = y + Grid(direct, def, 0, y, COLS)
                         nSub = 0
                         for _, kid in ipairs(kids) do
-                            local list = snap.groups[kid.id] or EMPTY
+                            local list = groups[kid.id] or EMPTY
                             if Visible(kid, #list) then
                                 nSub = nSub + 1
                                 sub[nSub] = NewBlock(kid, list, ns.GetCategoryLabel(kid))
@@ -279,28 +312,35 @@ function ns.UI.NewCategoryGrid(cfg)
             end
         end
 
-        -- Emplacements libres : bloc d'une seule icône, avec les derniers blocs.
-        local free = snap.free
-        if #free > 0 then
-            local target = pickFree and pickFree(free) or free[1]
-            local b = NewBlock(FREE_DEF, EMPTY, ns.L("CAT_FREE"))
-            b.count, b.free, b.numFree = 1, target, #free
-            nRun = nRun + 1
-            run[nRun] = b
+        -- Emplacements libres : sacs puis sac de composants (fleur), tout en bas.
+        local nFree = 0
+        if not noFree then
+            local free, reagent = snap.free, snap.freeReagent
+            if #free > 0 then
+                nFree = nFree + 1
+                local f = freeSlots[nFree]
+                f.slot, f.num, f.reagent = pickFree and pickFree(free) or free[1], #free, false
+            end
+            if reagent and #reagent > 0 then
+                nFree = nFree + 1
+                local f = freeSlots[nFree]
+                f.slot, f.num, f.reagent = reagent[1], #reagent, true
+            end
         end
-        -- Sac de composants : son propre emplacement de dépôt, marqué de la fleur.
-        local freeReagent = snap.freeReagent
-        if freeReagent and #freeReagent > 0 then
+        Flush()
+        if nFree > 0 then
             local b = NewBlock(FREE_DEF, EMPTY, ns.L("CAT_FREE"))
-            b.count, b.free, b.numFree, b.reagent = 1, freeReagent[1], #freeReagent, true
-            nRun = nRun + 1
-            run[nRun] = b
+            b.count, b.frees = nFree, freeSlots
+            nRun = 1
+            run[1] = b
         end
         Flush()
         IB.Finish()
 
-        return math.max(y - SECTION_GAP, 1)
+        return math.max(y - SECTION_GAP, 1), usedW
     end
+
+    Apply(ns.UI.GetMetrics("standard"), cfg.cols)
 
     return G
 end
