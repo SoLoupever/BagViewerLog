@@ -34,7 +34,12 @@ end
 
 ns.GetItemStatic = GetStatic
 
--- Entrée de (bag, slot), objet (e = { id, count, link }) ou vide (e = nil).
+-- Conteneurs virtuels (hors C_Container, ex. onglets du coffre de guilde) :
+-- bagID = ns.VBAG_BASE + index, au-dessus de tous les bagID Blizzard.
+ns.VBAG_BASE = 100
+
+-- Entrée de (bag, slot), objet (e = { id, count, link, quality?, locked? }) ou
+-- vide (e = nil). quality / locked : fournis par les sources sans cache objet.
 -- Renvoie l'entrée et true si son contenu a changé.
 function ns.FillSlot(bag, slot, e)
     local perBag = pool[bag]
@@ -51,10 +56,12 @@ function ns.FillSlot(bag, slot, e)
     if e then
         local id, count, link = e.id, e.count, e.link
         local s = GetStatic(id)
+        local quality, locked = e.quality or s.quality, e.locked
         local changed = x.id ~= id or x.rawCount ~= count or x.link ~= link
-                        or x.quality ~= s.quality
+                        or x.quality ~= quality or x.locked ~= locked
         x.id, x.count, x.rawCount, x.link = id, count, count, link
-        x.icon, x.classID, x.subClassID, x.quality = s.icon, s.classID, s.subClassID, s.quality
+        x.icon, x.classID, x.subClassID, x.quality = s.icon, s.classID, s.subClassID, quality
+        x.locked = locked
         return x, changed
     end
 
@@ -62,6 +69,7 @@ function ns.FillSlot(bag, slot, e)
     if changed then
         x.id, x.count, x.rawCount, x.link = nil, nil, nil, nil
         x.icon, x.classID, x.subClassID, x.quality = nil, nil, nil, nil
+        x.locked = nil
     end
     return x, changed
 end

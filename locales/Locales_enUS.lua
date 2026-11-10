@@ -9,6 +9,16 @@ ns.locales["enUS"] = {
     BANK_DEPOSIT       = "Deposit items",
     BANK_NO_TABS       = "No tab available",
 
+    GUILD_TITLE          = "Guild Bank",
+    GUILD_TITLE_FMT      = "%s's Bank",
+    GUILD_ALL            = "All",
+    GUILD_NO_TABS        = "No viewable tab",
+    GUILD_DEPOSIT_MONEY  = "Deposit",
+    GUILD_WITHDRAW_MONEY = "Withdraw",
+    GUILD_BLIZZARD       = "Blizzard frame",
+    GUILD_BLIZZARD_TIP   = "Log, info and tab purchase.",
+    GUILD_BACK           = "Back to BagViewerLog",
+
     MENU_BTN             = "Categories",
     MENU_TITLE           = "Categories",
     MENU_SUB             = "Subcategory",

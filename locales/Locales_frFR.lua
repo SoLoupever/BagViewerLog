@@ -9,6 +9,16 @@ ns.locales["frFR"] = {
     BANK_DEPOSIT       = "Déposer les objets",
     BANK_NO_TABS       = "Aucun onglet disponible",
 
+    GUILD_TITLE          = "Coffre de guilde",
+    GUILD_TITLE_FMT      = "Coffre de %s",
+    GUILD_ALL            = "Tous",
+    GUILD_NO_TABS        = "Aucun onglet lisible",
+    GUILD_DEPOSIT_MONEY  = "Déposer",
+    GUILD_WITHDRAW_MONEY = "Retirer",
+    GUILD_BLIZZARD       = "Cadre Blizzard",
+    GUILD_BLIZZARD_TIP   = "Journal, infos et achat d'onglet.",
+    GUILD_BACK           = "Retour à BagViewerLog",
+
     MENU_BTN             = "Catégories",
     MENU_TITLE           = "Catégories",
     MENU_SUB             = "Sous-catégorie",

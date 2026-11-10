@@ -25,6 +25,7 @@ categories\Base.lua
 ## ── DONNÉES ───────────────────────────────────────────────────────
 data\Inventory.lua
 data\Bank.lua
+data\GuildBank.lua
 
 ## ── MODULES ───────────────────────────────────────────────────────
 modules\Search.lua
@@ -64,6 +65,7 @@ ui\badges\ItemLevel.lua
 ui\badges\Keystone.lua
 ui\badges\Reagent.lua
 ui\ItemButtons.lua
+ui\buttons\Guild.lua
 ui\Sections.lua
 ui\PlusSlots.lua
 ui\CategoryGrid.lua
@@ -77,6 +79,10 @@ ui\widgets\CloseButton.lua
 ui\widgets\Money.lua
 ui\Frame.lua
 ui\BankFrame.lua
+ui\guild\TabBar.lua
+ui\guild\Footer.lua
+ui\guild\Return.lua
+ui\GuildFrame.lua
 ui\menu\CategoryList.lua
 ui\menu\ItemList.lua
 ui\CategoryMenu.lua
@@ -86,3 +92,4 @@ ui\BagBar.lua
 ## ── REMPLACEMENT DU SAC BLIZZARD (en dernier) ─────────────────────
 core\Replace.lua
 core\ReplaceBank.lua
+core\ReplaceGuild.lua
