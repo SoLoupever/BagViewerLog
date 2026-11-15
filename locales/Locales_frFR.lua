@@ -68,6 +68,15 @@ ns.locales["frFR"] = {
     SORT_TIP_TITLE     = "Trier les sacs",
     SORT_TIP_DESC      = "Range automatiquement le contenu de vos sacs.",
 
+    HISTORY_TITLE      = "Historique",
+    HISTORY_TITLE_FMT  = "Historique de %s",
+    HISTORY_BAGS       = "Sacs",
+    HISTORY_EMPTY      = "Aucune donnée enregistrée par ViewerLog",
+    HISTORY_CHAR_TIP   = "Changer de personnage",
+    HISTORY_CHAR_DESC  = "Consulte les sacs d'un autre personnage (historique ViewerLog).",
+    HISTORY_BANK_TIP   = "Banque et bataillon",
+    HISTORY_BANK_DESC  = "Ouvre la banque et la banque de bataillon (historique ViewerLog).",
+
     CAT_NEW            = "Nouveaux objets",
     CAT_EQUIPMENT      = "Équipement",
     CAT_CONSUMABLE     = "Consommables",

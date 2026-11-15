@@ -49,7 +49,7 @@ local function Pickup(self)
 end
 
 ns.UI.RegisterButtonKind({
-    matches = function(bag) return bag > ns.VBAG_BASE end,
+    matches = function(bag) return bag > ns.VBAG_BASE and bag < ns.HBAG_BASE end,
     create = function(parent, bag, slot)
         local btn = CreateFrame("ItemButton", nil, parent, "GuildBankItemButtonTemplate")
         btn.tab, btn.slot = bag - ns.VBAG_BASE, slot

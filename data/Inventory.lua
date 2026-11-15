@@ -37,6 +37,8 @@ ns.GetItemStatic = GetStatic
 -- Conteneurs virtuels (hors C_Container, ex. onglets du coffre de guilde) :
 -- bagID = ns.VBAG_BASE + index, au-dessus de tous les bagID Blizzard.
 ns.VBAG_BASE = 100
+-- Conteneurs de l'historique ViewerLog (lecture seule), au-dessus des virtuels.
+ns.HBAG_BASE = 1000
 
 -- Entrée de (bag, slot), objet (e = { id, count, link, quality?, locked? }) ou
 -- vide (e = nil). quality / locked : fournis par les sources sans cache objet.

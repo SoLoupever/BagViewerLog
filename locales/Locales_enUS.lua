@@ -68,6 +68,15 @@ ns.locales["enUS"] = {
     SORT_TIP_TITLE     = "Sort bags",
     SORT_TIP_DESC      = "Automatically arranges the contents of your bags.",
 
+    HISTORY_TITLE      = "History",
+    HISTORY_TITLE_FMT  = "History of %s",
+    HISTORY_BAGS       = "Bags",
+    HISTORY_EMPTY      = "No data recorded by ViewerLog",
+    HISTORY_CHAR_TIP   = "Switch character",
+    HISTORY_CHAR_DESC  = "Shows another character's bags (ViewerLog history).",
+    HISTORY_BANK_TIP   = "Bank and warband",
+    HISTORY_BANK_DESC  = "Opens the bank and the warband bank (ViewerLog history).",
+
     CAT_NEW            = "New items",
     CAT_EQUIPMENT      = "Equipment",
     CAT_CONSUMABLE     = "Consumables",

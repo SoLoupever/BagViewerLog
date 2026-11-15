@@ -5,19 +5,15 @@ local addonName, ns = ...
 ns.UI.RegisterWidget({
     id = "bags", area = "title", side = "right", order = 4,
     build = function(parent)
-        local b = CreateFrame("Button", nil, parent)
-        b:SetSize(26, 26)
-        b:SetNormalTexture("Interface\\Buttons\\Button-Backpack-Up")
-        b:SetPushedTexture("Interface\\Buttons\\Button-Backpack-Down")
-        b:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+        local b = ns.UI.IconButton(parent, 26, "bourse")
 
         b:SetScript("OnClick", function() ns.Fire("BAGS_TOGGLE") end)
-        b:SetScript("OnEnter", function(s)
+        b:HookScript("OnEnter", function(s)
             GameTooltip:SetOwner(s, "ANCHOR_TOP")
             GameTooltip:AddLine(ns.L("BAGS_TIP_TITLE"), 1, 1, 1)
             GameTooltip:Show()
         end)
-        b:SetScript("OnLeave", GameTooltip_Hide)
+        b:HookScript("OnLeave", GameTooltip_Hide)
 
         return b
     end,

@@ -38,6 +38,17 @@ function ns.UI.Button(parent, w, h, text)
     return b
 end
 
+-- Bouton plat portant une icône de Assets/ (nom sans extension).
+function ns.UI.IconButton(parent, size, icon)
+    local b = ns.UI.Button(parent, size, size, "")
+    local tex = b:CreateTexture(nil, "ARTWORK")
+    tex:SetPoint("TOPLEFT", 3, -3)
+    tex:SetPoint("BOTTOMRIGHT", -3, 3)
+    tex:SetTexture("Interface\\AddOns\\" .. addonName .. "\\Assets\\" .. icon)
+    b.icon = tex
+    return b
+end
+
 -- Champ de saisie plat ; Entrée / Échap rendent le focus.
 function ns.UI.EditBox(parent, height, maxLetters)
     local box = ns.UI.Flat(parent, "inner", "innerBorder", "EditBox")
