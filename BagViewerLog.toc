@@ -38,6 +38,7 @@ modules\Assign.lua
 modules\ItemLevel.lua
 modules\Reagent.lua
 modules\Keystone.lua
+modules\Tier.lua
 modules\Vendor.lua
 modules\Hearthstone.lua
 modules\Toy.lua
@@ -51,6 +52,7 @@ modules\views\OneBag.lua
 modules\views\MultiBag.lua
 modules\bank\Character.lua
 modules\bank\Warband.lua
+modules\bank\Tabs.lua
 modules\history\Bags.lua
 modules\history\Bank.lua
 modules\history\Warband.lua
@@ -67,6 +69,7 @@ ui\options\Compact.lua
 ui\Badges.lua
 ui\badges\ItemLevel.lua
 ui\badges\Keystone.lua
+ui\badges\Tier.lua
 ui\badges\Reagent.lua
 ui\ItemButtons.lua
 ui\buttons\Guild.lua

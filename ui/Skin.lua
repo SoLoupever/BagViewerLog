@@ -11,8 +11,9 @@ local FLAT = {
 }
 
 -- bgKey / borderKey : clés de ns.UI.Colors.
-function ns.UI.Flat(parent, bgKey, borderKey, frameType)
-    local f = CreateFrame(frameType or "Frame", nil, parent, "BackdropTemplate")
+function ns.UI.Flat(parent, bgKey, borderKey, frameType, template)
+    local f = CreateFrame(frameType or "Frame", nil, parent,
+        template and ("BackdropTemplate," .. template) or "BackdropTemplate")
     f:SetBackdrop(FLAT)
     local bg, bd = C[bgKey], C[borderKey]
     f:SetBackdropColor(bg[1], bg[2], bg[3], bg[4])
@@ -20,8 +21,8 @@ function ns.UI.Flat(parent, bgKey, borderKey, frameType)
     return f
 end
 
-function ns.UI.Button(parent, w, h, text)
-    local b = ns.UI.Flat(parent, "btnBg", "btnBorder", "Button")
+function ns.UI.Button(parent, w, h, text, template)
+    local b = ns.UI.Flat(parent, "btnBg", "btnBorder", "Button", template)
     b:SetSize(w, h)
     b.label = b:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     b.label:SetPoint("CENTER")

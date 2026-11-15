@@ -8,6 +8,7 @@ ns.locales["frFR"] = {
     BANK_WARBAND       = "Bataillon",
     BANK_DEPOSIT       = "Déposer les objets",
     BANK_NO_TABS       = "Aucun onglet disponible",
+    BANK_TAB_ALL       = "Tous",
 
     GUILD_TITLE          = "Coffre de guilde",
     GUILD_TITLE_FMT      = "Coffre de %s",
@@ -62,7 +63,7 @@ ns.locales["frFR"] = {
 
     OPTIONS_TITLE      = "Options du sac",
     OPT_COMPACT        = "Sac compact",
-    OPT_COMPACT_DESC   = "Réduit les emplacements, les marges et la hauteur maximale du sac.",
+    OPT_COMPACT_DESC   = "Réduit les emplacements, les marges et la hauteur maximale du sac. Active aussi la vue par onglet en banque.",
 
     SEARCH_PLACEHOLDER = "Rechercher...",
     SORT_TIP_TITLE     = "Trier les sacs",

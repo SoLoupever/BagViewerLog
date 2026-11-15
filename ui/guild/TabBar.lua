@@ -1,7 +1,9 @@
 local addonName, ns = ...
 
 -- Barre d'onglets du coffre de guilde : « Tous » + un bouton par onglet lisible.
--- ns.UI.GuildTabBar.New(parent, onSelect(index|nil)) -> { Update(tabs, filter) }.
+-- ns.UI.GuildTabBar.New(parent, onSelect(index|nil), opts) -> { Update(tabs, filter), Hide() }.
+-- opts (optionnel, aussi utilisé par la banque) : { y = ordonnée, allKey = clé du bouton « Tous »,
+-- always = tous les onglets affichés, sans canView }.
 
 local C = ns.UI.Colors
 local W, STEP = 84, 88
@@ -33,15 +35,18 @@ end
 
 ns.UI.GuildTabBar = {}
 
-function ns.UI.GuildTabBar.New(parent, onSelect)
+function ns.UI.GuildTabBar.New(parent, onSelect, opts)
     local bar = {}
+    local y = opts and opts.y or -44
+    local allKey = opts and opts.allKey or "GUILD_ALL"
+    local always = opts and opts.always
     local btns = {}   -- [1] = « Tous », [i + 1] = onglet i
 
     local function Get(i)
         local b = btns[i]
         if not b then
             b = NewButton(parent, onSelect)
-            b:SetPoint("TOPLEFT", parent, "TOPLEFT", 12 + (i - 1) * STEP, -44)
+            b:SetPoint("TOPLEFT", parent, "TOPLEFT", 12 + (i - 1) * STEP, y)
             btns[i] = b
         end
         return b
@@ -51,12 +56,12 @@ function ns.UI.GuildTabBar.New(parent, onSelect)
         local n = 1
         local all = Get(1)
         all.index, all.tip = nil, nil
-        all.label:SetText(ns.L("GUILD_ALL"))
+        all.label:SetText(ns.L(allKey))
         Highlight(all, filter == nil)
         all:Show()
         for i = 1, #tabs do
             local t = tabs[i]
-            if t.canView then
+            if always or t.canView then
                 n = n + 1
                 local b = Get(n)
                 b.index, b.tip = i, t.name
@@ -66,6 +71,10 @@ function ns.UI.GuildTabBar.New(parent, onSelect)
             end
         end
         for i = n + 1, #btns do btns[i]:Hide() end
+    end
+
+    function bar.Hide()
+        for i = 1, #btns do btns[i]:Hide() end
     end
 
     return bar

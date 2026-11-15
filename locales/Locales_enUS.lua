@@ -8,6 +8,7 @@ ns.locales["enUS"] = {
     BANK_WARBAND       = "Warband",
     BANK_DEPOSIT       = "Deposit items",
     BANK_NO_TABS       = "No tab available",
+    BANK_TAB_ALL       = "All",
 
     GUILD_TITLE          = "Guild Bank",
     GUILD_TITLE_FMT      = "%s's Bank",
@@ -62,7 +63,7 @@ ns.locales["enUS"] = {
 
     OPTIONS_TITLE      = "Bag options",
     OPT_COMPACT        = "Compact bag",
-    OPT_COMPACT_DESC   = "Shrinks slots, margins and the maximum bag height.",
+    OPT_COMPACT_DESC   = "Shrinks slots, margins and the maximum bag height. Also enables the tab view in banks.",
 
     SEARCH_PLACEHOLDER = "Search...",
     SORT_TIP_TITLE     = "Sort bags",

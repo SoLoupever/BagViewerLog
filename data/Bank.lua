@@ -45,17 +45,22 @@ function ns.Bank.GetTabs(id)
 end
 
 -- Tous les onglets du type fusionnés, classés par catégorie comme le sac :
--- { groups = { catID -> objets }, free = { emplacements vides }, numTabs }.
+-- { groups = { catID -> objets }, free = { emplacements vides }, numTabs,
+--   slots = { tabID -> emplacements dans l'ordre (objets et vides), .used } }.
 -- Renvoie le snapshot et true si son contenu a changé.
 local function Build(id)
     local d = types[id]
     local snap = snaps[id]
     if not snap then
-        snap = { groups = {}, free = {}, numTabs = 0 }
+        snap = { groups = {}, free = {}, slots = {}, numTabs = 0 }
         snaps[id] = snap
     end
-    local groups, free = snap.groups, snap.free
+    local groups, free, slots = snap.groups, snap.free, snap.slots
     for _, list in pairs(groups) do wipe(list) end
+    for _, list in pairs(slots) do
+        wipe(list)
+        list.used = 0
+    end
     wipe(free)
 
     local dirty = false
@@ -64,10 +69,17 @@ local function Build(id)
         local tabID = tab.ID
         built[tabID] = true
         local data = d.getData(tabID)
+        local tabSlots = slots[tabID]
+        if not tabSlots then
+            tabSlots = { used = 0 }
+            slots[tabID] = tabSlots
+        end
         for slot = 1, C_Container.GetContainerNumSlots(tabID) or 0 do
             local e, changed = ns.FillSlot(tabID, slot, data and data[slot])
             if changed then dirty = true end
+            tabSlots[#tabSlots + 1] = e
             if e.id then
+                tabSlots.used = tabSlots.used + 1
                 local cat = ns.ResolveCategory(e)
                 local list = groups[cat]
                 if not list then
@@ -84,6 +96,11 @@ local function Build(id)
     snap.numTabs = #tabs
     stale[id] = nil
     return snap, dirty
+end
+
+-- bagID d'un onglet affiché (banque ouverte) ?
+function ns.Bank.IsTab(bag)
+    return built[bag] == true
 end
 
 function ns.Bank.Get(id)

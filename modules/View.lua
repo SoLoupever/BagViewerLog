@@ -64,11 +64,11 @@ end
 local function Add(e)
     local list = bags[e.bag]
     if not list then
-        list = {}
+        list = { used = 0 }
         bags[e.bag] = list
     end
     list[#list + 1] = e
-    if e.id then list.used = (list.used or 0) + 1 end
+    if e.id then list.used = list.used + 1 end
 end
 
 -- Tous les emplacements (objets et vides) par sac, dans l'ordre.

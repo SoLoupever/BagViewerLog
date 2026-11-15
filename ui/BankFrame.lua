@@ -3,7 +3,8 @@ local addonName, ns = ...
 -- Cadre de banque (personnage / bataillon) : types et onglets viennent de
 -- ns.Bank, les emplacements sont de vrais boutons (dépôt / retrait natifs).
 -- Tous les onglets du type actif sont fusionnés en une seule vue par catégories ;
--- la hauteur suit le contenu.
+-- en mode compact, une barre d'onglets permet d'afficher un seul onglet.
+-- La hauteur suit le contenu.
 
 local C  = ns.UI.Colors
 local IB = ns.UI.NewItemButtons()
@@ -11,24 +12,29 @@ local IB = ns.UI.NewItemButtons()
 local COLS, SLOT, GAP, PAD = 20, 37, 4, 12
 local SCROLLBAR_W = 24
 local TOP_CHROME, BOTTOM_CHROME = 80, 52
+local TAB_ROW_H = 30   -- barre d'onglets (mode compact)
 
 local CONTENT_W = COLS * SLOT + (COLS - 1) * GAP
 local FRAME_W   = PAD * 2 + CONTENT_W + SCROLLBAR_W
 
-local frame, content, emptyText, Grid
+local frame, content, emptyText, Grid, scroll, tabBar
 local typeBtns = {}
 local curType
-local EMPTY_SNAP = { groups = {}, free = {}, numTabs = 0 }
+local topChrome = TOP_CHROME
+local EMPTY_SNAP = { groups = {}, free = {}, slots = {}, numTabs = 0 }
+local OPTS = { showCustom = false }
 
 local Refresh
 
 -- ── Synchro Blizzard ──────────────────────────────────────────────
 -- Le dépôt par clic droit depuis le sac suit le type actif du BankFrame.
-local function SyncBlizzard(def)
+-- Le changement passe par un clic sécurisé sur l'onglet Blizzard : l'appeler
+-- depuis le code de l'addon propage un taint (UseContainerItem bloqué).
+local function SyncBlizzard(btn, def)
     local bf = _G.BankFrame
-    if not (bf and bf.SetTab) then return end
+    if not (bf and bf.TabSystem and not InCombatLockdown()) then return end
     local tabID = (def.bankType == Enum.BankType.Account) and bf.accountBankTabID or bf.characterBankTabID
-    if tabID then pcall(bf.SetTab, bf, tabID) end
+    btn:SetAttribute("clickbutton", tabID and bf:GetTabButton(tabID) or nil)
 end
 
 -- ── Boutons ───────────────────────────────────────────────────────
@@ -43,29 +49,51 @@ local SwitchType
 local function GetTypeButton(i)
     local b = typeBtns[i]
     if not b then
-        b = ns.UI.Button(frame, 110, 26, "")
+        b = ns.UI.Button(frame, 110, 26, "", "SecureActionButtonTemplate")
+        b:SetAttribute("type", "click")
+        b:RegisterForClicks("AnyUp", "AnyDown")
         b:SetScript("OnLeave", function(s) Highlight(s, s.selected) end)
-        b:SetScript("OnClick", function(s) SwitchType(s.typeID) end)
+        b:SetScript("PostClick", function(s) SwitchType(s.typeID) end)
         typeBtns[i] = b
     end
     return b
 end
 
 -- ── Grille ────────────────────────────────────────────────────────
+local function SetTopChrome(h)
+    if h == topChrome then return end
+    topChrome = h
+    scroll:ClearAllPoints()
+    scroll:SetPoint("TOPLEFT",     frame, "TOPLEFT",     PAD, -h)
+    scroll:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -(PAD + SCROLLBAR_W), BOTTOM_CHROME)
+end
+
 local function Layout()
     local def = curType and ns.Bank.GetType(curType)
     local snap = def and ns.Bank.Get(curType) or EMPTY_SNAP
 
-    local contentH = Grid.Render(snap, { holding = ns.Cursor.GetItemID() ~= nil, showCustom = false })
+    -- Mode compact : barre d'onglets, un onglet choisi = vue par emplacements.
+    local tabs = ns.Compact.IsEnabled() and snap.numTabs > 0 and ns.Bank.GetTabs(curType)
+    OPTS.view = nil
+    if tabs then
+        local index, tab = ns.BankTabs.Resolve(tabs)
+        tabBar.Update(tabs, index)
+        if tab then OPTS.view = ns.BankTabs.GetView(tab) end
+    else
+        tabBar.Hide()
+    end
+    SetTopChrome(tabs and TOP_CHROME + TAB_ROW_H or TOP_CHROME)
+
+    OPTS.holding = ns.Cursor.GetItemID() ~= nil
+    local contentH = Grid.Render(snap, OPTS)
     content:SetHeight(contentH)
     emptyText:SetShown(snap.numTabs == 0)
     -- La fenêtre suit le contenu, plafonnée à la hauteur de l'écran.
-    frame:SetHeight(math.min(contentH + TOP_CHROME + BOTTOM_CHROME, UIParent:GetHeight()))
+    frame:SetHeight(math.min(contentH + topChrome + BOTTOM_CHROME, UIParent:GetHeight()))
 end
 
 function SwitchType(id)
     curType = id
-    SyncBlizzard(ns.Bank.GetType(id))
     Refresh()
 end
 
@@ -86,6 +114,7 @@ Refresh = function()
         b:SetPoint("TOPLEFT", frame, "TOPLEFT", PAD + (i - 1) * 116, -44)
         b.label:SetText(ns.L(def.labelKey))
         b.typeID = def.id
+        SyncBlizzard(b, def)
         Highlight(b, def.id == curType)
         b:Show()
     end
@@ -121,6 +150,11 @@ local function Build()
     close:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -PAD, -10)
     close:SetScript("OnClick", function() frame:Hide() end)
 
+    tabBar = ns.UI.GuildTabBar.New(frame, function(index)
+        local tab = index and ns.Bank.GetTabs(curType)[index]
+        ns.BankTabs.Set(tab and tab.ID)
+    end, { y = -(TOP_CHROME - 6), allKey = "BANK_TAB_ALL", always = true })
+
     local deposit = ns.UI.Button(frame, 160, 26, ns.L("BANK_DEPOSIT"))
     deposit:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", PAD, PAD)
     deposit:SetScript("OnClick", function()
@@ -128,7 +162,7 @@ local function Build()
         if def then C_Bank.AutoDepositItemsIntoBank(def.bankType) end
     end)
 
-    local scroll = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
+    scroll = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
     scroll:SetPoint("TOPLEFT",     frame, "TOPLEFT",     PAD, -TOP_CHROME)
     scroll:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -(PAD + SCROLLBAR_W), BOTTOM_CHROME)
 
@@ -160,6 +194,14 @@ local function Build()
 
     ns.On("BANK_CHANGED", function()
         if frame:IsShown() then Refresh() end
+    end)
+    ns.On("COMPACT_CHANGED", function()
+        if frame:IsShown() then Layout() end
+    end)
+    ns.On("BANK_TAB_CHANGED", function()
+        if not frame:IsShown() then return end
+        scroll:SetVerticalScroll(0)
+        Layout()
     end)
 
     -- Objet tenu au curseur ("+") et changements de classement : un seul
