@@ -9,6 +9,10 @@ ns.locales["enUS"] = {
     BANK_DEPOSIT       = "Deposit items",
     BANK_NO_TABS       = "No tab available",
     BANK_TAB_ALL       = "All",
+    BANK_MULTITAB      = "Multi tabs",
+    BANK_MULTITAB_TIP  = "Shows all tabs at once, one section per tab.",
+    BANK_SORT_TIP_TITLE = "Sort bank",
+    BANK_SORT_TIP_DESC = "Automatically arranges the tabs of the displayed bank.",
 
     GUILD_TITLE          = "Guild Bank",
     GUILD_TITLE_FMT      = "%s's Bank",

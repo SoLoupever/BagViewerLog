@@ -9,6 +9,8 @@ local Frame = ns.UI.Frame
 
 -- true quand l'ouverture vient d'avoir lieu pendant l'appel Toggle* en cours.
 local openedThisCall = false
+-- Ouverture hors Toggle* (HV, marchand...) : le drapeau ne doit pas survivre.
+local function ClearOpened() openedThisCall = false end
 
 local function HideBlizzardFrame(f)
     if not f or not f.Hide then return end
@@ -24,6 +26,7 @@ EventRegistry:RegisterCallback("ContainerFrame.OpenBag", function(_, blizzFrame)
     HideBlizzardFrame(blizzFrame)
     if not Frame.IsShown() then
         openedThisCall = true
+        C_Timer.After(0, ClearOpened)
         Frame.Show()
     end
 end, ns)

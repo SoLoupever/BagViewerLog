@@ -3,7 +3,9 @@ local addonName, ns = ...
 -- Cadre de banque (personnage / bataillon) : types et onglets viennent de
 -- ns.Bank, les emplacements sont de vrais boutons (dépôt / retrait natifs).
 -- Tous les onglets du type actif sont fusionnés en une seule vue par catégories ;
--- en mode compact, une barre d'onglets permet d'afficher un seul onglet.
+-- en mode compact, une barre d'onglets permet d'afficher un seul onglet ;
+-- la vue multi-onglets affiche une section par onglet (ns.BankTabs).
+-- Les boutons de la barre "bankbar" viennent du registre de widgets.
 -- La hauteur suit le contenu.
 
 local C  = ns.UI.Colors
@@ -73,9 +75,13 @@ local function Layout()
     local snap = def and ns.Bank.Get(curType) or EMPTY_SNAP
 
     -- Mode compact : barre d'onglets, un onglet choisi = vue par emplacements.
-    local tabs = ns.Compact.IsEnabled() and snap.numTabs > 0 and ns.Bank.GetTabs(curType)
+    local multi = snap.numTabs > 0 and ns.BankTabs.IsMulti()
+    local tabs = not multi and ns.Compact.IsEnabled() and snap.numTabs > 0 and ns.Bank.GetTabs(curType)
     OPTS.view = nil
-    if tabs then
+    if multi then
+        tabBar.Hide()
+        OPTS.view = ns.BankTabs.GetMultiView(ns.Bank.GetTabs(curType))
+    elseif tabs then
         local index, tab = ns.BankTabs.Resolve(tabs)
         tabBar.Update(tabs, index)
         if tab then OPTS.view = ns.BankTabs.GetView(tab) end
@@ -149,6 +155,11 @@ local function Build()
     local close = ns.UI.Button(frame, 26, 26, "X")
     close:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -PAD, -10)
     close:SetScript("OnClick", function() frame:Hide() end)
+
+    local bar = CreateFrame("Frame", nil, frame)
+    bar:SetSize(300, 26)
+    bar:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -PAD, -44)
+    ns.UI.PlaceArea("bankbar", bar)
 
     tabBar = ns.UI.GuildTabBar.New(frame, function(index)
         local tab = index and ns.Bank.GetTabs(curType)[index]

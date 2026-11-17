@@ -103,6 +103,11 @@ function ns.Bank.IsTab(bag)
     return built[bag] == true
 end
 
+-- Définition du type dernièrement affiché (nil banque fermée).
+function ns.Bank.GetViewedType()
+    return viewed and types[viewed] or nil
+end
+
 function ns.Bank.Get(id)
     viewed = id
     if stale[id] or not snaps[id] then Build(id) end

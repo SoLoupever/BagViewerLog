@@ -53,6 +53,7 @@ modules\views\MultiBag.lua
 modules\bank\Character.lua
 modules\bank\Warband.lua
 modules\bank\Tabs.lua
+modules\bank\MultiTab.lua
 modules\history\Bags.lua
 modules\history\Bank.lua
 modules\history\Warband.lua
@@ -88,6 +89,8 @@ ui\widgets\Money.lua
 ui\widgets\CharButton.lua
 ui\widgets\HistoryButton.lua
 ui\Frame.lua
+ui\bank\SortButton.lua
+ui\bank\MultiTabButton.lua
 ui\BankFrame.lua
 ui\guild\TabBar.lua
 ui\guild\Footer.lua

@@ -9,6 +9,10 @@ ns.locales["frFR"] = {
     BANK_DEPOSIT       = "Déposer les objets",
     BANK_NO_TABS       = "Aucun onglet disponible",
     BANK_TAB_ALL       = "Tous",
+    BANK_MULTITAB      = "Multi-onglets",
+    BANK_MULTITAB_TIP  = "Affiche tous les onglets en même temps, une section par onglet.",
+    BANK_SORT_TIP_TITLE = "Trier la banque",
+    BANK_SORT_TIP_DESC = "Range automatiquement les onglets de la banque affichée.",
 
     GUILD_TITLE          = "Coffre de guilde",
     GUILD_TITLE_FMT      = "Coffre de %s",

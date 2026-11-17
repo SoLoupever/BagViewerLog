@@ -43,6 +43,8 @@ local function PlaceArea(area, host)
     end
 end
 
+ns.UI.PlaceArea = PlaceArea
+
 -- Zone verticale (panneau latéral) : widgets "top", de haut en bas.
 local function PlaceColumn(area, host)
     local prev
