@@ -100,6 +100,7 @@ end
 
 function SwitchType(id)
     curType = id
+    ns.Fire("BANK_TYPE_CHANGED", id)
     Refresh()
 end
 
@@ -111,6 +112,11 @@ Refresh = function()
         curType = types[1] and types[1].id
         for _, d in ipairs(types) do
             if d.bankType == active then curType = d.id end
+        end
+        -- Dernier type consulté, s'il est consultable à ce banquier.
+        local saved = ns.BankMemory.Get()
+        for _, d in ipairs(types) do
+            if d.id == saved then curType = d.id end
         end
     end
 

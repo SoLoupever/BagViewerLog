@@ -1,7 +1,8 @@
 local addonName, ns = ...
 
--- Barre des sacs équipés (sac à dos, 4 sacs, sac de composants), en lecture
--- seule, collée à gauche du sac. Les événements ne sont écoutés que visible.
+-- Barre des sacs équipés (sac à dos, 4 sacs, sac de composants), collée à
+-- gauche du sac. Clic : retirer / équiper un sac ; clic droit : menu (BAGS_MENU).
+-- Les événements ne sont écoutés que visible.
 
 local C = ns.UI.Colors
 
@@ -31,6 +32,29 @@ local function UpdateSlot(s)
         if q then r, g, b = C_Item.GetItemQualityColor(q) end
     end
     s:SetBackdropBorderColor(r, g, b, 1)
+
+    local f = ns.BagFlags.GetActive(bag)
+    if f then s.filter:SetAtlas(f.icon) end
+    s.filter:SetShown(f ~= nil)
+end
+
+-- Cursor : équipe le sac tenu ; sinon retire le sac vers le sac à dos.
+local function OnClick(s, button)
+    if button == "RightButton" then
+        ns.Fire("BAGS_MENU", s, s.bag)
+        return
+    end
+    if InCombatLockdown() or not s.invID then return end
+    if CursorHasItem() then
+        PutItemInBag(s.invID)
+    elseif s.link then
+        PickupBagFromSlot(s.invID)
+        PutItemInBackpack()
+    end
+end
+
+local function OnReceive(s)
+    if s.invID and not InCombatLockdown() then PutItemInBag(s.invID) end
 end
 
 local function ShowTip(s)
@@ -43,6 +67,10 @@ local function ShowTip(s)
     else
         GameTooltip:AddLine(ns.L(s.bag == REAGENT_BAG and "BAGS_REAGENT" or "BAGS_EMPTY_SLOT"), 1, 1, 1)
     end
+    local f = ns.BagFlags.GetActive(s.bag)
+    if f then GameTooltip:AddLine(ns.L("BAGFLAG_ASSIGNED_FMT"):format(ns.L(f.key)), 1, 1, 1, true) end
+    if s.link then GameTooltip:AddLine(ns.L("BAGS_HINT_REMOVE"), 0.65, 0.62, 0.55) end
+    GameTooltip:AddLine(ns.L("BAGS_HINT_MENU"), 0.65, 0.62, 0.55)
     GameTooltip:Show()
 end
 
@@ -71,6 +99,17 @@ local function Build()
         s.count = s:CreateFontString(nil, "OVERLAY", "NumberFontNormal")
         s.count:SetPoint("BOTTOMRIGHT", -3, 3)
 
+        s.filter = s:CreateTexture(nil, "OVERLAY")
+        s.filter:SetSize(16, 16)
+        s.filter:SetPoint("TOPLEFT", 2, -2)
+
+        s:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+        s:RegisterForDrag("LeftButton")
+        s:SetScript("OnClick", OnClick)
+        s:SetScript("OnDragStart", function(b)
+            if b.link and b.invID and not InCombatLockdown() then PickupBagFromSlot(b.invID) end
+        end)
+        s:SetScript("OnReceiveDrag", OnReceive)
         s:SetScript("OnEnter", ShowTip)
         s:SetScript("OnLeave", GameTooltip_Hide)
         slots[#slots + 1] = s
@@ -79,6 +118,7 @@ local function Build()
     bar:SetScript("OnShow", function(f)
         f:RegisterEvent("BAG_CONTAINER_UPDATE")
         f:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
+        f:RegisterEvent("BAG_SLOT_FLAGS_UPDATED")
         Refresh()
     end)
     bar:SetScript("OnHide", function(f)

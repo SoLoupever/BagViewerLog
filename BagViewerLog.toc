@@ -46,6 +46,8 @@ modules\EquipSets.lua
 modules\Custom.lua
 modules\Order.lua
 modules\Compact.lua
+modules\CombinedBags.lua
+modules\BagFlags.lua
 modules\View.lua
 modules\views\Category.lua
 modules\views\OneBag.lua
@@ -54,6 +56,7 @@ modules\bank\Character.lua
 modules\bank\Warband.lua
 modules\bank\Tabs.lua
 modules\bank\MultiTab.lua
+modules\bank\Memory.lua
 modules\history\Bags.lua
 modules\history\Bank.lua
 modules\history\Warband.lua
@@ -102,6 +105,7 @@ ui\menu\CategoryList.lua
 ui\menu\ItemList.lua
 ui\CategoryMenu.lua
 ui\OptionsMenu.lua
+ui\BagMenu.lua
 ui\BagBar.lua
 
 ## ── REMPLACEMENT DU SAC BLIZZARD (en dernier) ─────────────────────
