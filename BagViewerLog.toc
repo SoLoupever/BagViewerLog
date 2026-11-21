@@ -94,6 +94,7 @@ ui\widgets\HistoryButton.lua
 ui\Frame.lua
 ui\bank\SortButton.lua
 ui\bank\MultiTabButton.lua
+ui\bank\MoneyFooter.lua
 ui\BankFrame.lua
 ui\guild\TabBar.lua
 ui\guild\Footer.lua

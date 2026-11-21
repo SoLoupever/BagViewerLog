@@ -19,7 +19,7 @@ local TAB_ROW_H = 30   -- barre d'onglets (mode compact)
 local CONTENT_W = COLS * SLOT + (COLS - 1) * GAP
 local FRAME_W   = PAD * 2 + CONTENT_W + SCROLLBAR_W
 
-local frame, content, emptyText, Grid, scroll, tabBar
+local frame, content, emptyText, Grid, scroll, tabBar, moneyFooter
 local typeBtns = {}
 local curType
 local topChrome = TOP_CHROME
@@ -132,6 +132,7 @@ Refresh = function()
     end
     for i = #types + 1, #typeBtns do typeBtns[i]:Hide() end
 
+    moneyFooter.Update(curType and ns.Bank.GetType(curType).bankType)
     Layout()
 end
 
@@ -178,6 +179,8 @@ local function Build()
         local def = curType and ns.Bank.GetType(curType)
         if def then C_Bank.AutoDepositItemsIntoBank(def.bankType) end
     end)
+
+    moneyFooter = ns.UI.BankMoneyFooter.New(frame, deposit)
 
     scroll = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
     scroll:SetPoint("TOPLEFT",     frame, "TOPLEFT",     PAD, -TOP_CHROME)
